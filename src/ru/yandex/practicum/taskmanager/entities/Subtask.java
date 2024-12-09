@@ -1,28 +1,25 @@
 package ru.yandex.practicum.taskmanager.entities;
 
 import ru.yandex.practicum.taskmanager.enums.TaskStatus;
-import ru.yandex.practicum.taskmanager.enums.TaskType;
 
 public class Subtask extends Task {
-    private int parentTaskId;
+    private int epicId;
 
     public Subtask(int id, String title, String description, TaskStatus status) {
         super(id, title, description, status);
-        this.type = TaskType.SUBTASK;
     }
 
-    public Subtask(int id, String title, String description, TaskStatus status, int parentTaskId) {
+    public Subtask(int id, String title, String description, TaskStatus status, int epicId) {
         this(id, title, description, status);
-
-        this.parentTaskId = parentTaskId;
+        this.epicId = epicId;
     }
 
-    public int getParentTaskId() {
-        return parentTaskId;
+    public int getEpicId() {
+        return epicId;
     }
 
-    public void setParentTaskId(int parentTaskId) {
-        this.parentTaskId = parentTaskId;
+    public void setEpicId(int epicId) {
+        this.epicId = epicId;
     }
 
 }

@@ -1,40 +1,35 @@
 package ru.yandex.practicum.taskmanager.entities;
 
 import ru.yandex.practicum.taskmanager.enums.TaskStatus;
-import ru.yandex.practicum.taskmanager.enums.TaskType;
 
 import java.util.ArrayList;
 
 public class Epic extends Task {
-
-    private ArrayList<Integer> subTasksIds = new ArrayList<>();
+    private ArrayList<Integer> subtasksIds = new ArrayList<>();
 
     public Epic(int id, String title, String description, TaskStatus status) {
         super(id, title, description, status);
-        // Пользователь не должен иметь возможности поменять статус эпика самостоятельно.
-        setStatus(TaskStatus.NEW);
-        this.type = TaskType.EPIC;
     }
 
-    public Epic(int id, String title, String description, TaskStatus status, int[] subTasksIds) {
+    public Epic(int id, String title, String description, TaskStatus status, ArrayList<Integer> subtasksIds) {
+        super(id, title, description, status);
+        this.subtasksIds = subtasksIds;
+    }
+
+    public Epic(int id, String title, String description, TaskStatus status, int[] subtasksIds) {
         this(id, title, description, status);
 
-        for (int subTasksId : subTasksIds) {
-            this.subTasksIds.add(subTasksId);
+        for (int subTasksId : subtasksIds) {
+            this.subtasksIds.add(subTasksId);
         }
     }
 
-    public Epic(int id, String title, String description, TaskStatus status, ArrayList<Integer> subTasksIds) {
-        super(id, title, description, status);
-        this.subTasksIds = subTasksIds;
+    public ArrayList<Integer> getSubtasksIds() {
+        return subtasksIds;
     }
 
-    public ArrayList<Integer> getSubTasksIds() {
-        return subTasksIds;
-    }
-
-    public void setSubTasksIds(ArrayList<Integer> subTasksIds) {
-        this.subTasksIds = subTasksIds;
+    public void setSubtasksIds(ArrayList<Integer> subtasksIds) {
+        this.subtasksIds = subtasksIds;
     }
 
 }

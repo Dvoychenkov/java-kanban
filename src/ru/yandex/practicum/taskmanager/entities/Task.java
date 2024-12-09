@@ -1,33 +1,31 @@
 package ru.yandex.practicum.taskmanager.entities;
 
 import ru.yandex.practicum.taskmanager.enums.TaskStatus;
-import ru.yandex.practicum.taskmanager.enums.TaskType;
 
 public class Task {
     protected final int id;
     protected String title;
     protected String description;
-    public TaskStatus status;
-    protected TaskType type;
+
+    protected TaskStatus status;
 
     public Task(int id, String title, String description, TaskStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.status = status;
-        this.type = TaskType.TASK;
     }
 
     public int getId() {
-        return hashCode();
+        return id;
+    }
+
+    public TaskStatus getStatus() {
+        return status;
     }
 
     public void setStatus(TaskStatus status) {
         this.status = status;
-    }
-
-    public TaskType getTaskType() {
-        return type;
     }
 
     @Override
@@ -42,14 +40,13 @@ public class Task {
 
     @Override
     public int hashCode() {
-        return id;
+        return getId();
     }
 
     @Override
     public String toString() {
 
-        String result = "\nTask{" + "id='" + id + "', " +
-                "type='" + type.name() + "', " +
+        String result = "Task{" + "id='" + id + "', " +
                 "status='" + status.name() + "', ";
 
         if(title != null) {
@@ -64,7 +61,7 @@ public class Task {
             result = result + "description.length=0";
         }
 
-        result = result + "}\n";
+        result = result + "}";
         return result;
     }
 
