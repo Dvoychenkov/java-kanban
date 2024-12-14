@@ -1,6 +1,6 @@
-package ru.yandex.practicum.taskmanager.entities;
+package entities;
 
-import ru.yandex.practicum.taskmanager.enums.TaskStatus;
+import enums.TaskStatus;
 
 public class Task {
     protected final int id;
