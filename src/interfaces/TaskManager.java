@@ -9,11 +9,11 @@ import java.util.List;
 public interface TaskManager {
     int getNewId();
 
-    List<Task> getAllTasks();
+    List<Task> getTasks();
 
-    List<Subtask> getAllSubtasks();
+    List<Subtask> getSubtasks();
 
-    List<Epic> getAllEpics();
+    List<Epic> getEpics();
 
     void deleteAllTasks();
 
