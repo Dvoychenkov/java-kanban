@@ -15,6 +15,13 @@ public class Task {
         this.status = status;
     }
 
+    public Task(Task task) {
+        this.id = task.id;
+        this.title = task.title;
+        this.description = task.description;
+        this.status = task.status;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -23,12 +30,28 @@ public class Task {
         return id;
     }
 
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
+
     public TaskStatus getStatus() {
         return status;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     @Override
@@ -48,24 +71,13 @@ public class Task {
 
     @Override
     public String toString() {
-
-        String result = "Task{" + "id='" + id + "', " +
-                "status='" + status.name() + "', ";
-
-        if(title != null) {
-            result = result + "title=" + title + "', ";
-        } else {
-            result = result + "title=null, ";
-        }
-
-        if(description != null) {
-            result = result + "description.length=" + description.length();
-        } else {
-            result = result + "description.length=0";
-        }
-
-        result = result + "}";
-        return result;
+        StringBuilder result = new StringBuilder("Task{")
+                .append("id='").append(id).append("', ")
+                .append("status='").append(status.name()).append("', ")
+                .append("title=").append(title != null ? ("'" + title + "'") : "null").append(", ")
+                .append("description.length=").append(description != null ? description.length() : 0)
+                .append("}");
+        return result.toString();
     }
 
 }
