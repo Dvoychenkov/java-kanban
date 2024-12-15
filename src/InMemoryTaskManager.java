@@ -4,13 +4,21 @@ import enums.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
+    private final int historyMaxCapacity;
     private int idsCount;
 
     private final HashMap<Integer, Task> tasksIdsToTasks = new HashMap<>();
     private final HashMap<Integer, Subtask> subtasksIdsToSubtasks = new HashMap<>();
     private final HashMap<Integer, Epic> epicsIdsToEpics = new HashMap<>();
+
+    private final List<Task> tasksHistory = new ArrayList<>();
+
+    public InMemoryTaskManager(int historyMaxCapacity) {
+        this.historyMaxCapacity = historyMaxCapacity;
+    }
 
     @Override
     public int getNewId() {
@@ -18,17 +26,17 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
         return new ArrayList<>(tasksIdsToTasks.values());
     }
 
     @Override
-    public ArrayList<Subtask> getAllSubtasks() {
+    public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasksIdsToSubtasks.values());
     }
 
     @Override
-    public ArrayList<Epic> getAllEpics() {
+    public List<Epic> getAllEpics() {
         return new ArrayList<>(epicsIdsToEpics.values());
     }
 
@@ -59,17 +67,29 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task getTaskById(int id) {
-        return tasksIdsToTasks.getOrDefault(id, null);
+        Task task = tasksIdsToTasks.getOrDefault(id, null);
+        if (task != null) {
+            addToHistory(task);
+        }
+        return task;
     }
 
     @Override
     public Subtask getSubtaskById(int id) {
-        return subtasksIdsToSubtasks.getOrDefault(id, null);
+        Subtask subtask = subtasksIdsToSubtasks.getOrDefault(id, null);
+        if (subtask != null) {
+            addToHistory(subtask);
+        }
+        return subtask;
     }
 
     @Override
     public Epic getEpicById(int id) {
-        return epicsIdsToEpics.getOrDefault(id, null);
+        Epic epic = epicsIdsToEpics.getOrDefault(id, null);
+        if (epic != null) {
+            addToHistory(epic);
+        }
+        return epic;
     }
 
     @Override
@@ -156,7 +176,7 @@ public class InMemoryTaskManager implements TaskManager {
 
 
     @Override
-    public ArrayList<Subtask> getSubtasksOfEpic(Epic epic) {
+    public List<Subtask> getSubtasksOfEpic(Epic epic) {
         ArrayList<Subtask> subtasks = new ArrayList<>();
         if (epic == null) {
             return subtasks;
@@ -186,6 +206,25 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+    @Override
+    public List<Task> getHistory() {
+        return tasksHistory;
+    }
+
+    @Override
+    public void addToHistory(Task task) {
+        int tasksHistorySize = tasksHistory.size();
+
+        // Размер списка для хранения просмотров не должен превышать заранее определённый лимит
+        if (tasksHistorySize >= historyMaxCapacity) {
+            while (tasksHistory.size() >= historyMaxCapacity) {
+                tasksHistory.removeFirst();
+            }
+        }
+
+        tasksHistory.add(task);
+    }
+
     // Обновление эпика подзадачи
     private void updateEpicDataBySubtask(Subtask subtask) {
         if (subtask == null) {
@@ -210,7 +249,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Обновление данных эпика
     private void updateEpicData(Epic epic) {
-        ArrayList<Subtask> subtasksOfEpic = getSubtasksOfEpic(epic);
+        List<Subtask> subtasksOfEpic = getSubtasksOfEpic(epic);
 
         // Если у эпика нет подзадач, то статус должен быть NEW
         if (subtasksOfEpic.isEmpty()) {
@@ -236,7 +275,7 @@ public class InMemoryTaskManager implements TaskManager {
     // Если у эпика все подзадачи имеют статус NEW, то статус должен быть NEW.
     // Если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
     // Во всех остальных случаях статус должен быть IN_PROGRESS.
-    private TaskStatus calcEpicStatus(ArrayList<Subtask> subtasksOfEpic) {
+    private TaskStatus calcEpicStatus(List<Subtask> subtasksOfEpic) {
         TaskStatus statusToBeSet = TaskStatus.IN_PROGRESS;
         boolean hasInProgress = false;
         boolean hasNew = false;
