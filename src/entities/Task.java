@@ -3,17 +3,20 @@ package entities;
 import enums.TaskStatus;
 
 public class Task {
-    protected final int id;
+    protected int id;
     protected String title;
     protected String description;
 
     protected TaskStatus status;
 
-    public Task(int id, String title, String description, TaskStatus status) {
-        this.id = id;
+    public Task(String title, String description, TaskStatus status) {
         this.title = title;
         this.description = description;
         this.status = status;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getId() {
