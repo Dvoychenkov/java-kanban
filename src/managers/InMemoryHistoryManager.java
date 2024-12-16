@@ -16,7 +16,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public List<Task> getHistory() {
-        return tasksHistory;
+        return new ArrayList<>(tasksHistory);
     }
 
     @Override
@@ -25,9 +25,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         // Размер списка для хранения просмотров не должен превышать заранее определённый лимит
         if (tasksHistorySize >= historyMaxCapacity) {
-            while (tasksHistory.size() >= historyMaxCapacity) {
-                tasksHistory.removeFirst();
-            }
+            tasksHistory.removeFirst();
         }
 
         tasksHistory.add(task);

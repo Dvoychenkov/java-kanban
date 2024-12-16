@@ -94,7 +94,7 @@ class ManagersTest {
         inMemoryTaskManager.getTask(taskId);
 
         List<Task> tasksHistoryAfterUpdate =  inMemoryTaskManager.getHistory();
-        int tasksHistoryAfterUpdateSize = tasksHistory.size();
+        int tasksHistoryAfterUpdateSize = tasksHistoryAfterUpdate.size();
         Task firstTaskFromHistoryAfterUpdate = tasksHistoryAfterUpdate.getFirst();
 
         int firstTaskFromHistoryAfterUpdateId = firstTaskFromHistoryAfterUpdate.getId();

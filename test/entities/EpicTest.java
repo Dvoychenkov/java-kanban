@@ -50,7 +50,7 @@ class EpicTest {
 
         savedSubtask.setEpicId(epicId);
 
-        ArrayList<Integer> epicsSubtasksIds = new ArrayList<>();
+        List<Integer> epicsSubtasksIds = new ArrayList<>();
         epicsSubtasksIds.add(subtaskId);
         savedEpic.setSubtasksIds(epicsSubtasksIds);
         taskManager.updateEpic(savedEpic);
@@ -61,7 +61,7 @@ class EpicTest {
 
         assertEquals(savedSubtask.getEpicId(), updatedEpic.getId(), "Эпик не указан для подзадачи");
 
-        ArrayList<Integer> updatedEpicsSubtasksIds = updatedEpic.getSubtasksIds();
+        List<Integer> updatedEpicsSubtasksIds = updatedEpic.getSubtasksIds();
 
         assertNotNull(updatedEpicsSubtasksIds, "Список подзадач эпика не проинициализирован");
         assertNotEquals(true, updatedEpicsSubtasksIds.isEmpty(), "Список подзадач эпика пустой");
@@ -77,7 +77,7 @@ class EpicTest {
         assertNotNull(epic.getSubtasksIds(), "Список подзадач эпика не проинициализирован");
         assertTrue(epic.getSubtasksIds().isEmpty(), "Эпик содержит подзадачи сразу после создания");
 
-        ArrayList<Integer> epicSubtasksIds = new ArrayList<>();
+        List<Integer> epicSubtasksIds = new ArrayList<>();
         epicSubtasksIds.add(epicId);
         epic.setSubtasksIds(epicSubtasksIds);
         taskManager.updateEpic(epic);
@@ -97,7 +97,7 @@ class EpicTest {
         String receivedEpicTitle = receivedEpic.getTitle();
         String receivedEpicDescription = receivedEpic.getDescription();
         TaskStatus receivedEpicStatus = receivedEpic.getStatus();
-        ArrayList<Integer> receivedEpicSubtasksIds = receivedEpic.getSubtasksIds();
+        List<Integer> receivedEpicSubtasksIds = receivedEpic.getSubtasksIds();
         int receivedEpicSubtaskId = -1;
         if (!receivedEpicSubtasksIds.isEmpty()) {
             receivedEpicSubtaskId = receivedEpicSubtasksIds.getFirst();
@@ -107,7 +107,7 @@ class EpicTest {
         epic.setTitle("Title 1 try to change not in manager");
         epic.setDescription("Description 1 try to change not in manager");
         epic.setStatus(TaskStatus.IN_PROGRESS);
-        ArrayList<Integer> newEpicSubtasks = new ArrayList<>();
+        List<Integer> newEpicSubtasks = new ArrayList<>();
         newEpicSubtasks.add(100500);
         epic.setSubtasksIds(newEpicSubtasks);
 
@@ -116,7 +116,7 @@ class EpicTest {
         String receivedEpicAgainTitle = receivedEpicAgain.getTitle();
         String receivedEpicAgainDescription = receivedEpicAgain.getDescription();
         TaskStatus receivedEpicAgainStatus = receivedEpicAgain.getStatus();
-        ArrayList<Integer> receivedEpicAgainSubtasksIds = receivedEpic.getSubtasksIds();
+        List<Integer> receivedEpicAgainSubtasksIds = receivedEpic.getSubtasksIds();
 
         int receivedEpicAgainSubtaskId = -1;
         if (!receivedEpicSubtasksIds.isEmpty()) {

@@ -8,14 +8,15 @@ import utilities.Managers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
     private final HistoryManager historyManager;
     private int idsCount = 1;
 
-    private final HashMap<Integer, Task> tasksIdsToTasks = new HashMap<>();
-    private final HashMap<Integer, Subtask> subtasksIdsToSubtasks = new HashMap<>();
-    private final HashMap<Integer, Epic> epicsIdsToEpics = new HashMap<>();
+    private final Map<Integer, Task> tasksIdsToTasks = new HashMap<>();
+    private final Map<Integer, Subtask> subtasksIdsToSubtasks = new HashMap<>();
+    private final Map<Integer, Epic> epicsIdsToEpics = new HashMap<>();
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
@@ -48,7 +49,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllSubtasks() {
-        ArrayList<Subtask> subtasksToBeUpdated = new ArrayList<>(subtasksIdsToSubtasks.values());
+        List<Subtask> subtasksToBeUpdated = new ArrayList<>(subtasksIdsToSubtasks.values());
         subtasksIdsToSubtasks.clear();
 
         for (Subtask subtask : subtasksToBeUpdated) {
@@ -201,7 +202,7 @@ public class InMemoryTaskManager implements TaskManager {
             return new ArrayList<>();
         }
 
-        ArrayList<Subtask> subtasks = new ArrayList<>();
+        List<Subtask> subtasks = new ArrayList<>();
         // Учитываем, что подзадача должна быть в списке подзадач
         for (Integer subtasksId : epic.getSubtasksIds()) {
             if (subtasksIdsToSubtasks.containsKey(subtasksId)) {
@@ -242,7 +243,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         // Добавление id подзадачи в список подзадач эпика, если его ещё нет в нём
         int currentSubtaskId = subtask.getId();
-        ArrayList<Integer> epicSubtasksIds = epic.getSubtasksIds();
+        List<Integer> epicSubtasksIds = epic.getSubtasksIds();
         if (!epicSubtasksIds.contains(currentSubtaskId)) {
             epicSubtasksIds.add(currentSubtaskId);
         }
@@ -262,7 +263,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Обновление списка подзадач эпика
-        ArrayList<Integer> epicSubtasksIds = new ArrayList<>();
+        List<Integer> epicSubtasksIds = new ArrayList<>();
         for (Subtask epicsSubtask : subtasksOfEpic) {
             int epicSubtaskId = epicsSubtask.getId();
             epicSubtasksIds.add(epicSubtaskId);

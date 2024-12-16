@@ -45,7 +45,7 @@ class SubtaskTest {
         int subtaskId = taskManager.addNewSubtask(subtask);
         Subtask savedSubtask = taskManager.getSubtask(subtaskId);
 
-        ArrayList<Integer> epicsSubtasksIds = new ArrayList<>();
+        List<Integer> epicsSubtasksIds = new ArrayList<>();
         epicsSubtasksIds.add(subtaskId);
 
         Epic epic = new Epic("Epic addNewEpic", "Epic addNewEpic description", TaskStatus.NEW);
@@ -63,7 +63,7 @@ class SubtaskTest {
 
         assertEquals(updatedSubtask.getEpicId(), savedEpic.getId(), "Эпик не указан для подзадачи");
 
-        ArrayList<Integer> savedEpicsSubtasksIds = savedEpic.getSubtasksIds();
+        List<Integer> savedEpicsSubtasksIds = savedEpic.getSubtasksIds();
 
         assertNotNull(savedEpicsSubtasksIds, "Список подзадач эпика не проинициализирован");
         assertNotEquals(true, savedEpicsSubtasksIds.isEmpty(), "Список подзадач эпика пустой");

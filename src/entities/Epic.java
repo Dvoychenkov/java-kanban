@@ -3,9 +3,10 @@ package entities;
 import enums.TaskStatus;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Epic extends Task {
-    private ArrayList<Integer> subtasksIds = new ArrayList<>();
+    private List<Integer> subtasksIds = new ArrayList<>();
 
     public Epic(String title, String description, TaskStatus status) {
         super(title, description, status);
@@ -16,7 +17,7 @@ public class Epic extends Task {
         this.subtasksIds = epic.subtasksIds;
     }
 
-    public Epic(String title, String description, TaskStatus status, ArrayList<Integer> subtasksIds) {
+    public Epic(String title, String description, TaskStatus status, List<Integer> subtasksIds) {
         super(title, description, status);
         this.subtasksIds = subtasksIds;
     }
@@ -29,11 +30,11 @@ public class Epic extends Task {
         }
     }
 
-    public ArrayList<Integer> getSubtasksIds() {
+    public List<Integer> getSubtasksIds() {
         return subtasksIds;
     }
 
-    public void setSubtasksIds(ArrayList<Integer> subtasksIds) {
+    public void setSubtasksIds(List<Integer> subtasksIds) {
         this.subtasksIds = subtasksIds;
     }
 
