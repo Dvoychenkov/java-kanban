@@ -15,11 +15,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-    public List<Task> getHistory() {
-        return new ArrayList<>(tasksHistory);
-    }
-
-    @Override
     public void add(Task task) {
         int tasksHistorySize = tasksHistory.size();
 
@@ -29,5 +24,15 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
 
         tasksHistory.add(task);
+    }
+
+    @Override
+    public void remove(int id) {
+        tasksHistory.removeIf(task -> id == task.getId());
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        return new ArrayList<>(tasksHistory);
     }
 }

@@ -44,12 +44,19 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
+        for (Integer taskId : tasksIdsToTasks.keySet()) {
+            historyManager.remove(taskId);
+        }
         tasksIdsToTasks.clear();
     }
 
     @Override
     public void deleteAllSubtasks() {
         List<Subtask> subtasksToBeUpdated = new ArrayList<>(subtasksIdsToSubtasks.values());
+
+        for (Integer subtaskId : subtasksIdsToSubtasks.keySet()) {
+            historyManager.remove(subtaskId);
+        }
         subtasksIdsToSubtasks.clear();
 
         for (Subtask subtask : subtasksToBeUpdated) {
@@ -64,6 +71,9 @@ public class InMemoryTaskManager implements TaskManager {
             updateEpicData(epic);
         }
 
+        for (Integer epicId : epicsIdsToEpics.keySet()) {
+            historyManager.remove(epicId);
+        }
         epicsIdsToEpics.clear();
     }
 
@@ -168,6 +178,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTaskById(int id) {
         Task task = tasksIdsToTasks.get(id);
         if (task != null) {
+            historyManager.remove(id);
             tasksIdsToTasks.remove(id);
         }
     }
@@ -176,6 +187,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteSubtaskById(int id) {
         Subtask subtask = subtasksIdsToSubtasks.get(id);
         if (subtask != null) {
+            historyManager.remove(id);
             subtasksIdsToSubtasks.remove(id);
             updateEpicDataBySubtask(subtask);
         }
@@ -185,6 +197,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteEpicById(int id) {
         Epic epic = epicsIdsToEpics.get(id);
         if (epic != null) {
+            historyManager.remove(id);
             epicsIdsToEpics.remove(id);
             deleteEpicSubtasks(epic);
             updateEpicData(epic);
@@ -218,6 +231,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteEpicSubtasks(Epic epic) {
         for (Integer subtaskId : epic.getSubtasksIds()) {
+            historyManager.remove(subtaskId);
             subtasksIdsToSubtasks.remove(subtaskId);
         }
     }
