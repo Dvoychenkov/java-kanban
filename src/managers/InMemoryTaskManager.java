@@ -202,8 +202,8 @@ public class InMemoryTaskManager implements TaskManager {
             return new ArrayList<>();
         }
 
-        List<Subtask> subtasks = new ArrayList<>();
         // Учитываем, что подзадача должна быть в списке подзадач
+        List<Subtask> subtasks = new ArrayList<>();
         for (Integer subtasksId : epic.getSubtasksIds()) {
             if (subtasksIdsToSubtasks.containsKey(subtasksId)) {
                 Subtask subtask = subtasksIdsToSubtasks.get(subtasksId);
@@ -227,14 +227,16 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    // Обновление эпика подзадачи
+    // Обновление эпика подзадачи:
+    // 1. Пробуем получить epic на основе данных subtask, убеждаемся, что он есть в списке эпиков.
+    // 2. Добавляем id subtask в список связанных подзадач эпика, если его там нет.
+    // 3. Запускаем процесс обновления данных для самого эпика.
     private void updateEpicDataBySubtask(Subtask subtask) {
         if (subtask == null) {
             return;
         }
         int epicId = subtask.getEpicId();
 
-        // Epic epic = getEpic(epicId);
         Epic epic = epicsIdsToEpics.get(epicId);
         if (epic == null) {
             subtask.setEpicId(0);
@@ -251,7 +253,9 @@ public class InMemoryTaskManager implements TaskManager {
         updateEpicData(epic);
     }
 
-    // Обновление данных эпика
+    // Обновление данных эпика:
+    // 1. Вычисляем и актуализируем статус эпика
+    // 2. Обновляем список подзадач эпика
     private void updateEpicData(Epic epic) {
         List<Subtask> subtasksOfEpic = getSubtasksOfEpic(epic);
 
@@ -276,9 +280,10 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setStatus(statusToBeSet);
     }
 
-    // Если у эпика все подзадачи имеют статус NEW, то статус должен быть NEW.
-    // Если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
-    // Во всех остальных случаях статус должен быть IN_PROGRESS.
+    // Вычисление статуса для эпика согласно условиям:
+    // - Если у эпика все подзадачи имеют статус NEW, то статус должен быть NEW.
+    // - Если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
+    // - Во всех остальных случаях статус должен быть IN_PROGRESS.
     private TaskStatus calcEpicStatus(List<Subtask> subtasksOfEpic) {
         TaskStatus statusToBeSet = TaskStatus.IN_PROGRESS;
         boolean hasInProgress = false;

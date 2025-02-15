@@ -71,13 +71,12 @@ public class Task {
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder("Task{")
-                .append("id='").append(id).append("', ")
-                .append("status='").append(status.name()).append("', ")
-                .append("title=").append(title != null ? ("'" + title + "'") : "null").append(", ")
-                .append("description.length=").append(description != null ? description.length() : 0)
-                .append("}");
-        return result.toString();
+        return "Task{" +
+                "id='" + id + "', " +
+                "status='" + status.name() + "', " +
+                "title=" + (title != null ? ("'" + title + "'") : "null") + ", " +
+                "description.length=" + (description != null ? description.length() : 0) +
+                "}";
     }
 
 }
