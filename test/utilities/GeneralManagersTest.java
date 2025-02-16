@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ManagersTest {
+class GeneralManagersTest {
     TaskManager inMemoryTaskManager;
     HistoryManager historyManager;
 
@@ -50,29 +50,9 @@ class ManagersTest {
         assertNotNull(historyManager.getHistory(), "Менеджер истории задач не добавил новую задачу");
     }
 
-    // Тест пустой истории
-    @Test
-    void getHistory() {
-        List<Task> history = historyManager.getHistory();
-        assertNotNull(history, "История не пустая.");
-        assertEquals(0, history.size(), "История не пустая.");
-    }
-
-    // Тест добавления задачи в историю напрямую
-    @Test
-    void add() {
-        Task task = new Task("Test addNewTask", "Test addNewTask description", TaskStatus.NEW);
-
-        historyManager.add(task);
-
-        List<Task> history = historyManager.getHistory();
-        assertNotNull(history, "История пустая.");
-        assertEquals(1, history.size(), "История пустая.");
-    }
-
     // Убеждаемся, что задачи, добавляемые в HistoryManager, сохраняют предыдущую версию задачи и её данных.
     @Test
-    void addLittleMoreTasks() {
+    void addLittleMoreTasksToHistory() {
         Task task = new Task("Task title 1", "Description 1", TaskStatus.NEW);
         int taskId = inMemoryTaskManager.addNewTask(task);
         Task savedTask = inMemoryTaskManager.getTask(taskId);
@@ -102,11 +82,11 @@ class ManagersTest {
         String firstTaskFromHistoryAfterUpdateDescription = firstTaskFromHistoryAfterUpdate.getDescription();
         TaskStatus firstTaskFromHistoryAfterUpdateStatus = firstTaskFromHistoryAfterUpdate.getStatus();
 
-        assertNotEquals(taskHistorySize, tasksHistoryAfterUpdateSize, "Количество записей в истории не должно совпадать после повторного просмотра задачи");
+        assertEquals(taskHistorySize, tasksHistoryAfterUpdateSize, "Количество записей в истории должно совпадать после повторного просмотра задачи");
         assertEquals(firstTaskFromHistoryId, firstTaskFromHistoryAfterUpdateId, "Id первой задачи в истории изменился");
-        assertEquals(firstTaskFromHistoryTitle, firstTaskFromHistoryAfterUpdateTitle, "Заголовок первой задачи в истории изменился");
-        assertEquals(firstTaskFromHistoryDescription, firstTaskFromHistoryAfterUpdateDescription, "Описание первой задачи в истории изменилось");
-        assertEquals(firstTaskFromHistoryStatus, firstTaskFromHistoryAfterUpdateStatus, "Статус первой задачи в истории изменился");
+        assertNotEquals(firstTaskFromHistoryTitle, firstTaskFromHistoryAfterUpdateTitle, "Заголовок первой задачи в истории не изменился");
+        assertNotEquals(firstTaskFromHistoryDescription, firstTaskFromHistoryAfterUpdateDescription, "Описание первой задачи в истории не изменилось");
+        assertNotEquals(firstTaskFromHistoryStatus, firstTaskFromHistoryAfterUpdateStatus, "Статус первой задачи в истории не изменился");
     }
 
 }

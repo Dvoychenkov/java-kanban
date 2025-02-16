@@ -52,15 +52,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllSubtasks() {
-        List<Subtask> subtasksToBeUpdated = new ArrayList<>(subtasksIdsToSubtasks.values());
+        List<Subtask> subtasksToBeDeleted = new ArrayList<>(subtasksIdsToSubtasks.values());
 
         for (Integer subtaskId : subtasksIdsToSubtasks.keySet()) {
             historyManager.remove(subtaskId);
         }
         subtasksIdsToSubtasks.clear();
 
-        for (Subtask subtask : subtasksToBeUpdated) {
+        for (Subtask subtask : subtasksToBeDeleted) {
             updateEpicDataBySubtask(subtask);
+        }
+
+        // Удаляемые подзадачи не должны хранить внутри себя старые id
+        for (Subtask subtask : subtasksToBeDeleted) {
+            subtask.setId(0);
+            subtask.setEpicId(0);
         }
     }
 
@@ -125,8 +131,10 @@ public class InMemoryTaskManager implements TaskManager {
         }
         int id = getNewId();
         subtask.setId(id);
-        updateEpicDataBySubtask(subtask);
+
         subtasksIdsToSubtasks.put(id, new Subtask(subtask));
+        updateEpicDataBySubtask(subtask);
+
         return id;
     }
 
@@ -186,10 +194,15 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteSubtaskById(int id) {
         Subtask subtask = subtasksIdsToSubtasks.get(id);
+
         if (subtask != null) {
             historyManager.remove(id);
             subtasksIdsToSubtasks.remove(id);
             updateEpicDataBySubtask(subtask);
+
+            // Удаляемые подзадачи не должны хранить внутри себя старые id
+            subtask.setId(0);
+            subtask.setEpicId(0);
         }
     }
 
@@ -231,6 +244,11 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteEpicSubtasks(Epic epic) {
         for (Integer subtaskId : epic.getSubtasksIds()) {
+            // Удаляемые подзадачи не должны хранить внутри себя старые id
+            Subtask subtask = subtasksIdsToSubtasks.get(subtaskId);
+            subtask.setId(0);
+            subtask.setEpicId(0);
+
             historyManager.remove(subtaskId);
             subtasksIdsToSubtasks.remove(subtaskId);
         }
