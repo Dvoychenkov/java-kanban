@@ -43,8 +43,11 @@ public class InMemoryTaskManagerTest {
     @Test
     void addAndRemoveSameTaskToHistory() {
         List<Task> history = historyManager.getHistory();
+
         int historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой при инициализации.");
+        int expectedHistorySize = 0;
+        String expectedHistorySizeMsg = "Размер истории равен %d, ожидалось %d.";
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         Task task = new Task("Test addNewTask", "Test addNewTask description", TaskStatus.NEW);
         task.setId(1);
@@ -52,22 +55,24 @@ public class InMemoryTaskManagerTest {
         historyManager.add(task);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        expectedHistorySize = 1;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.add(task);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.add(task);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.remove(task.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой после удаления единственной задачи.");
+        expectedHistorySize = 0;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.remove(task.getId());
         history = historyManager.getHistory();
@@ -79,8 +84,11 @@ public class InMemoryTaskManagerTest {
     @Test
     void addAndRemoveDifferentTasksToHistory() {
         List<Task> history = historyManager.getHistory();
+
         int historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой при инициализации.");
+        int expectedHistorySize = 0;
+        String expectedHistorySizeMsg = "Размер истории равен %d, ожидалось %d.";
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         Task task1 = new Task("Test addNewTask 1", "Test addNewTask description 1", TaskStatus.NEW);
         task1.setId(1);
@@ -94,78 +102,84 @@ public class InMemoryTaskManagerTest {
         historyManager.add(task1);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        expectedHistorySize = 1;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.add(task1);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
 
         historyManager.add(task2);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(2, historySize, "Размер истории не содержит две записи.");
+        expectedHistorySize = 2;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.add(task2);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(2, historySize, "Размер истории не содержит две записи.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
 
         historyManager.add(task3);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(3, historySize, "Размер истории не содержит три записи.");
+        expectedHistorySize = 3;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.add(task3);
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(3, historySize, "Размер истории не содержит три записи.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
 
         historyManager.remove(task1.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(2, historySize, "Размер истории не содержит две записи.");
+        expectedHistorySize = 2;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.remove(task1.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(2, historySize, "Размер истории не содержит две записи.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.remove(task2.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        expectedHistorySize = 1;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.remove(task2.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(1, historySize, "Размер истории не содержит одну запись.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
 
         historyManager.remove(task3.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой.");
+        expectedHistorySize = 0;
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
         historyManager.remove(task3.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
 
 
         historyManager.remove(task4.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
         assertFalse(historySize < 0, "Размер истории содержит отрицательное значение");
 
         historyManager.remove(task4.getId());
         history = historyManager.getHistory();
         historySize = history.size();
-        assertEquals(0, historySize, "Размер истории не пустой.");
+        assertEquals(expectedHistorySize, historySize, String.format(expectedHistorySizeMsg, historySize, expectedHistorySize));
         assertFalse(historySize < 0, "Размер истории содержит отрицательное значение");
     }
 }

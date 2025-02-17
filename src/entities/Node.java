@@ -1,9 +1,9 @@
 package entities;
 
 public class Node<T> {
-    public T data;
-    public Node<T> prev;
-    public Node<T> next;
+    private T data;
+    private Node<T> prev;
+    private Node<T> next;
 
     public Node(Node<T> node) {
         if (node == null) {
@@ -30,5 +30,29 @@ public class Node<T> {
                 "data<" + (curData != null ? ("'" + data + "'") : "null") + ">, " +
                 "next<" + (nextData != null ? ("'" + nextData + "'") : "null") + ">" +
                 "}";
+    }
+
+    public Node<T> getNext() {
+        return next;
+    }
+
+    public void setNext(Node<T> next) {
+        this.next = next;
+    }
+
+    public Node<T> getPrev() {
+        return prev;
+    }
+
+    public void setPrev(Node<T> prev) {
+        this.prev = prev;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
     }
 }
