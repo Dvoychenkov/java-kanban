@@ -2,10 +2,12 @@ package entities;
 
 import enums.TaskStatus;
 import interfaces.TaskManager;
+import managers.FileBackedTaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import utilities.Managers;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SubtaskTest {
-    static TaskManager taskManager;
+    private TaskManager taskManager;
 
     @BeforeEach
-    void beforeEach() {
-        taskManager = Managers.getDefault();
+    void setUp() throws IOException {
+        File tempFile = File.createTempFile("test_task_manager_data", ".csv");
+        tempFile.deleteOnExit();
+        taskManager = FileBackedTaskManager.loadFromFile(tempFile);
     }
 
     // Тест создания подзадачи

@@ -5,10 +5,18 @@ import enums.TaskStatus;
 import interfaces.TaskManager;
 import utilities.Managers;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        // 1. Убираем файл, если есть, и создаём менеджер
+        File storageFile = new File("task_manager_data.csv");
+        if (Files.exists(storageFile.toPath())) {
+            Files.delete(storageFile.toPath());
+        }
         TaskManager taskManager = Managers.getDefault();
 
         // 1. Создаём две обычные задачи
@@ -47,19 +55,19 @@ public class Main {
         taskManager.getSubtask(subtask3Id);
 
         // 3. Выводим историю и убеждаемся, что нет повторов
-        System.out.println("=".repeat(10));
+        System.out.println("=".repeat(50));
         System.out.println("История запросов - до удалений:");
         printHistory(taskManager);
 
         // 4. Удаляем одну из задач и проверяем, что её нет в истории
         taskManager.deleteTaskById(task1Id);
-        System.out.println("=".repeat(10));
+        System.out.println("=".repeat(50));
         System.out.println("История запросов - после удаления Task 1:");
         printHistory(taskManager);
 
         // 5. Удаляем эпик с тремя подзадачами и проверяем, что он и подзадачи исчезли из истории
         taskManager.deleteEpicById(epic1Id);
-        System.out.println("=".repeat(10));
+        System.out.println("=".repeat(50));
         System.out.println("История запросов - После удаления Epic 1 (и его подзадач):");
         printHistory(taskManager);
     }
