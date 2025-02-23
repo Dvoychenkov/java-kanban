@@ -14,9 +14,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
-public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
+public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File tasksStorage;
 
     public FileBackedTaskManager(File tasksStorage) {
@@ -31,11 +32,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     private void loadFromFile() {
-        if (!tasksStorage.exists()) {
-            // Если файл не существует, значит это первый запуск, не пытаемся считывать данные
-            return;
-        }
-
         try {
             String fileContent = Files.readString(tasksStorage.toPath());
 
@@ -213,11 +209,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     public static void main(String[] args) throws IOException {
-        // 1. Убираем файл, если есть, и создаём менеджер
+        // 1. Если файл существует - удаляем и создаём новый пустой
         File storageFile = new File("task_manager_data.csv");
-        if (Files.exists(storageFile.toPath())) {
-            Files.delete(storageFile.toPath());
+        Path pathToFile = storageFile.toPath();
+        if (Files.exists(pathToFile)) {
+            Files.delete(pathToFile);
         }
+        Files.createFile(pathToFile);
+
         TaskManager taskManagerFirstInit = FileBackedTaskManager.loadFromFile(storageFile);
 
         // 1. Создаём задачи, эпики и подзадачи
