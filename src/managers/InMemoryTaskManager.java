@@ -5,6 +5,7 @@ import entities.*;
 import enums.TaskStatus;
 import utilities.Managers;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -285,66 +286,8 @@ public class InMemoryTaskManager implements TaskManager {
         updateEpicData(epic);
     }
 
-    // Обновление данных эпика:
-    // 1. Вычисляем и актуализируем статус эпика
-    // 2. Обновляем список подзадач эпика
     private void updateEpicData(Epic epic) {
         List<Subtask> subtasksOfEpic = getSubtasksOfEpic(epic);
-
-        // Если у эпика нет подзадач, то статус должен быть NEW
-        if (subtasksOfEpic.isEmpty()) {
-            epic.setStatus(TaskStatus.NEW);
-            epic.setSubtasksIds(new ArrayList<>());
-            return;
-        }
-
-        // Обновление списка подзадач эпика
-        List<Integer> epicSubtasksIds = new ArrayList<>();
-        for (Subtask epicsSubtask : subtasksOfEpic) {
-            int epicSubtaskId = epicsSubtask.getId();
-            epicSubtasksIds.add(epicSubtaskId);
-        }
-        epic.setSubtasksIds(epicSubtasksIds);
-
-        // Обновление статуса для эпика
-        // Пользователь не должен иметь возможности поменять статус эпика самостоятельно.
-        TaskStatus statusToBeSet = calcEpicStatus(subtasksOfEpic);
-        epic.setStatus(statusToBeSet);
+        epic.updateData(subtasksOfEpic);
     }
-
-    // Вычисление статуса для эпика согласно условиям:
-    // - Если у эпика все подзадачи имеют статус NEW, то статус должен быть NEW.
-    // - Если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
-    // - Во всех остальных случаях статус должен быть IN_PROGRESS.
-    private TaskStatus calcEpicStatus(List<Subtask> subtasksOfEpic) {
-        TaskStatus statusToBeSet = TaskStatus.IN_PROGRESS;
-        boolean hasInProgress = false;
-        boolean hasNew = false;
-        boolean hasDone = false;
-        for (Task subTask : subtasksOfEpic) {
-            switch (subTask.getStatus()) {
-                case NEW:
-                    hasNew = true;
-                    break;
-                case IN_PROGRESS:
-                    hasInProgress = true;
-                    break;
-                case DONE:
-                    hasDone = true;
-                    break;
-            }
-
-            if (hasInProgress || (hasNew && hasDone)) {
-                return statusToBeSet;
-            }
-        }
-
-        if (hasDone) {
-            statusToBeSet = TaskStatus.DONE;
-        } else if (hasNew) {
-            statusToBeSet = TaskStatus.NEW;
-        }
-        return statusToBeSet;
-    }
-
 }
