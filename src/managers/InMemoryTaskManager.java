@@ -116,12 +116,21 @@ public class InMemoryTaskManager implements TaskManager {
         if (task == null) {
             return -1;
         }
+
         int id = getNewId();
         task.setId(id);
         tasksIdsToTasks.put(id, new Task(task));
-        if (task.getStartTime() != null) {
+        if (task.getStartTime() == null) {
+            return id;
+        }
+
+        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
+        if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Task(task));
         }
+
         return id;
     }
 
@@ -130,14 +139,21 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask == null) {
             return -1;
         }
+
         int id = getNewId();
         subtask.setId(id);
-
         subtasksIdsToSubtasks.put(id, new Subtask(subtask));
-        if (subtask.getStartTime() != null) {
+        updateEpicDataBySubtask(subtask);
+        if (subtask.getStartTime() == null) {
+            return id;
+        }
+
+        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
+        if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
         }
-        updateEpicDataBySubtask(subtask);
 
         return id;
     }
@@ -171,7 +187,14 @@ public class InMemoryTaskManager implements TaskManager {
         if (oldTask != null) {
             sortedByStartTimeTasksAndSubtasks.remove(oldTask);
         }
-        if (task.getStartTime() != null) {
+        if (task.getStartTime() == null) {
+            return;
+        }
+
+        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
+        if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Task(task));
         }
     }
@@ -194,7 +217,14 @@ public class InMemoryTaskManager implements TaskManager {
         if (oldSubtask != null) {
             sortedByStartTimeTasksAndSubtasks.remove(oldSubtask);
         }
-        if (subtask.getStartTime() != null) {
+        if (subtask.getStartTime() == null) {
+            return;
+        }
+
+        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
+        if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
         }
     }

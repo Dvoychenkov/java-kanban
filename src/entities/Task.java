@@ -102,6 +102,18 @@ public class Task {
         return startTime.plusMinutes(duration.toMinutes());
     }
 
+    // Проверяем пересечения отрезка выполнения текущей задачи и переданной
+    public boolean intersectsByTimeIntervals(Task other) {
+        if (other == null) return false;
+
+        LocalDateTime thisEndTime = getEndTime();
+        LocalDateTime otherStartTime = other.startTime;
+        LocalDateTime otherEndTime = other.getEndTime();
+        if (startTime == null || otherStartTime == null || thisEndTime == null || otherEndTime == null) return false;
+
+        return startTime.isBefore(otherEndTime) && thisEndTime.isAfter(otherStartTime);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
