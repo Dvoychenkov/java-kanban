@@ -2,15 +2,11 @@ package managers;
 
 import interfaces.*;
 import entities.*;
-import enums.TaskStatus;
 import utilities.Managers;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+// TODO заменить циклы foreach на stream тут и везде
 public class InMemoryTaskManager implements TaskManager {
     private final HistoryManager historyManager;
     private int idsCount = 1;
@@ -18,6 +14,7 @@ public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> tasksIdsToTasks = new HashMap<>();
     private final Map<Integer, Subtask> subtasksIdsToSubtasks = new HashMap<>();
     private final Map<Integer, Epic> epicsIdsToEpics = new HashMap<>();
+    private final Set<Task> sortedByStartTimeTasksAndSubtasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
@@ -45,27 +42,27 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
-        for (Integer taskId : tasksIdsToTasks.keySet()) {
-            historyManager.remove(taskId);
+        for (Map.Entry<Integer, Task> taskEntry : tasksIdsToTasks.entrySet()) {
+            historyManager.remove(taskEntry.getKey());
+            sortedByStartTimeTasksAndSubtasks.remove(taskEntry.getValue());
         }
         tasksIdsToTasks.clear();
     }
 
     @Override
     public void deleteAllSubtasks() {
-        List<Subtask> subtasksToBeDeleted = new ArrayList<>(subtasksIdsToSubtasks.values());
-
-        for (Integer subtaskId : subtasksIdsToSubtasks.keySet()) {
-            historyManager.remove(subtaskId);
+        Set<Map.Entry<Integer, Subtask>> subtasksEntriesToBeDeleted = new HashSet<>(subtasksIdsToSubtasks.entrySet());
+        for (Map.Entry<Integer, Subtask> subtaskEntry : subtasksEntriesToBeDeleted) {
+            historyManager.remove(subtaskEntry.getKey());
+            sortedByStartTimeTasksAndSubtasks.remove(subtaskEntry.getValue());
         }
+
         subtasksIdsToSubtasks.clear();
 
-        for (Subtask subtask : subtasksToBeDeleted) {
+        for (Map.Entry<Integer, Subtask> subtaskEntry : subtasksEntriesToBeDeleted) {
+            Subtask subtask = subtaskEntry.getValue();
             updateEpicDataBySubtask(subtask);
-        }
-
-        // Удаляемые подзадачи не должны хранить внутри себя старые id
-        for (Subtask subtask : subtasksToBeDeleted) {
+            // Удаляемые подзадачи не должны хранить внутри себя старые id
             subtask.setId(0);
             subtask.setEpicId(0);
         }
@@ -122,6 +119,9 @@ public class InMemoryTaskManager implements TaskManager {
         int id = getNewId();
         task.setId(id);
         tasksIdsToTasks.put(id, new Task(task));
+        if (task.getStartTime() != null) {
+            sortedByStartTimeTasksAndSubtasks.add(new Task(task));
+        }
         return id;
     }
 
@@ -134,6 +134,9 @@ public class InMemoryTaskManager implements TaskManager {
         subtask.setId(id);
 
         subtasksIdsToSubtasks.put(id, new Subtask(subtask));
+        if (subtask.getStartTime() != null) {
+            sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
+        }
         updateEpicDataBySubtask(subtask);
 
         return id;
@@ -153,69 +156,98 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
-        if (task != null) {
-            int id = task.getId();
-            if (tasksIdsToTasks.containsKey(id)) {
-                tasksIdsToTasks.replace(id, new Task(task));
-            }
+        if (task == null) {
+            return;
+        }
+        int id = task.getId();
+
+        Task oldTask = null;
+        if (tasksIdsToTasks.containsKey(id)) {
+            oldTask = tasksIdsToTasks.get(id);
+            tasksIdsToTasks.replace(id, new Task(task));
+        }
+
+        // Обновляем задачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям
+        if (oldTask != null) {
+            sortedByStartTimeTasksAndSubtasks.remove(oldTask);
+        }
+        if (task.getStartTime() != null) {
+            sortedByStartTimeTasksAndSubtasks.add(new Task(task));
         }
     }
 
     @Override
     public void updateSubtask(Subtask subtask) {
-        if (subtask != null) {
-            int id = subtask.getId();
-            if (subtasksIdsToSubtasks.containsKey(id)) {
-                updateEpicDataBySubtask(subtask);
-                subtasksIdsToSubtasks.replace(id, new Subtask(subtask));
-            }
+        if (subtask == null) {
+            return;
+        }
+        int id = subtask.getId();
+
+        Subtask oldSubtask = null;
+        if (subtasksIdsToSubtasks.containsKey(id)) {
+            updateEpicDataBySubtask(subtask);
+            oldSubtask = subtasksIdsToSubtasks.get(id);
+            subtasksIdsToSubtasks.replace(id, new Subtask(subtask));
+        }
+
+        // Обновляем подзадачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям
+        if (oldSubtask != null) {
+            sortedByStartTimeTasksAndSubtasks.remove(oldSubtask);
+        }
+        if (subtask.getStartTime() != null) {
+            sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
         }
     }
 
     @Override
     public void updateEpic(Epic epic) {
-        if (epic != null) {
-            int id = epic.getId();
-            if (epicsIdsToEpics.containsKey(id)) {
-                updateEpicData(epic);
-                epicsIdsToEpics.replace(id, new Epic(epic));
-            }
+        if (epic == null) {
+            return;
+        }
+        int id = epic.getId();
+        if (epicsIdsToEpics.containsKey(id)) {
+            updateEpicData(epic);
+            epicsIdsToEpics.replace(id, new Epic(epic));
         }
     }
 
     @Override
     public void deleteTaskById(int id) {
         Task task = tasksIdsToTasks.get(id);
-        if (task != null) {
-            historyManager.remove(id);
-            tasksIdsToTasks.remove(id);
+        if (task == null) {
+            return;
         }
+        historyManager.remove(id);
+        tasksIdsToTasks.remove(id);
+        sortedByStartTimeTasksAndSubtasks.remove(task);
     }
 
     @Override
     public void deleteSubtaskById(int id) {
         Subtask subtask = subtasksIdsToSubtasks.get(id);
-
-        if (subtask != null) {
-            historyManager.remove(id);
-            subtasksIdsToSubtasks.remove(id);
-            updateEpicDataBySubtask(subtask);
-
-            // Удаляемые подзадачи не должны хранить внутри себя старые id
-            subtask.setId(0);
-            subtask.setEpicId(0);
+        if (subtask == null) {
+            return;
         }
+        historyManager.remove(id);
+        subtasksIdsToSubtasks.remove(id);
+        sortedByStartTimeTasksAndSubtasks.remove(subtask);
+        updateEpicDataBySubtask(subtask);
+
+        // Удаляемые подзадачи не должны хранить внутри себя старые id
+        subtask.setId(0);
+        subtask.setEpicId(0);
     }
 
     @Override
     public void deleteEpicById(int id) {
         Epic epic = epicsIdsToEpics.get(id);
-        if (epic != null) {
-            historyManager.remove(id);
-            epicsIdsToEpics.remove(id);
-            deleteEpicSubtasks(epic);
-            updateEpicData(epic);
+        if (epic == null) {
+            return;
         }
+        historyManager.remove(id);
+        epicsIdsToEpics.remove(id);
+        deleteEpicSubtasks(epic);
+        updateEpicData(epic);
     }
 
     @Override
@@ -252,6 +284,7 @@ public class InMemoryTaskManager implements TaskManager {
 
             historyManager.remove(subtaskId);
             subtasksIdsToSubtasks.remove(subtaskId);
+            sortedByStartTimeTasksAndSubtasks.remove(subtask);
         }
     }
 
@@ -289,5 +322,9 @@ public class InMemoryTaskManager implements TaskManager {
     private void updateEpicData(Epic epic) {
         List<Subtask> subtasksOfEpic = getSubtasksOfEpic(epic);
         epic.updateData(subtasksOfEpic);
+    }
+
+    private List<Task> getPrioritizedTasks() {
+        return new ArrayList<>(sortedByStartTimeTasksAndSubtasks);
     }
 }

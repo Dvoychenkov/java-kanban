@@ -54,7 +54,7 @@ public class Epic extends Task {
     // Обновление данных эпика:
     // 1. Обновляем список подзадач эпика
     // 2. Вычисляем и актуализируем статус эпика
-    // 3. Обновляем временные параметры задачи
+    // 3. Обновляем временные параметры эпика
     public void updateData(List<Subtask> subtasksOfEpic) {
         // Если у эпика нет подзадач, то статус должен быть NEW
         if (subtasksOfEpic.isEmpty()) {
@@ -71,7 +71,7 @@ public class Epic extends Task {
         }
         setSubtasksIds(epicSubtasksIds);
 
-        setStatus(calcEpicStatus(subtasksOfEpic));
+        calcEpicStatus(subtasksOfEpic);
         calcEpicTimes(subtasksOfEpic);
     }
 
@@ -79,7 +79,7 @@ public class Epic extends Task {
     // - Если у эпика все подзадачи имеют статус NEW, то статус должен быть NEW.
     // - Если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
     // - Во всех остальных случаях статус должен быть IN_PROGRESS.
-    private TaskStatus calcEpicStatus(List<Subtask> subtasksOfEpic) {
+    private void calcEpicStatus(List<Subtask> subtasksOfEpic) {
         TaskStatus statusToBeSet = TaskStatus.IN_PROGRESS;
         boolean hasInProgress = false;
         boolean hasNew = false;
@@ -98,7 +98,8 @@ public class Epic extends Task {
             }
 
             if (hasInProgress || (hasNew && hasDone)) {
-                return statusToBeSet;
+                status = statusToBeSet;
+                return;
             }
         }
 
@@ -107,7 +108,7 @@ public class Epic extends Task {
         } else if (hasNew) {
             statusToBeSet = TaskStatus.NEW;
         }
-        return statusToBeSet;
+        status = statusToBeSet;
     }
 
     // Обновляем продолжительность задачи, время начала и окончания
