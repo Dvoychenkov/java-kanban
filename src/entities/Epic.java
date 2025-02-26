@@ -6,8 +6,10 @@ import enums.TaskType;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Epic extends Task {
     private List<Integer> subtasksIds = new ArrayList<>();
@@ -31,9 +33,8 @@ public class Epic extends Task {
     public Epic(String title, String description, TaskStatus status, int[] subtasksIds) {
         this(title, description, status);
 
-        for (int subTasksId : subtasksIds) {
-            this.subtasksIds.add(subTasksId);
-        }
+        Arrays.stream(subtasksIds)
+            .forEach(subTasksId -> this.subtasksIds.add(subTasksId));
     }
 
     public List<Integer> getSubtasksIds() {
@@ -64,11 +65,10 @@ public class Epic extends Task {
         }
 
         // Обновление списка подзадач эпика
-        List<Integer> epicSubtasksIds = new ArrayList<>();
-        for (Subtask epicsSubtask : subtasksOfEpic) {
-            int epicSubtaskId = epicsSubtask.getId();
-            epicSubtasksIds.add(epicSubtaskId);
-        }
+        List<Integer> epicSubtasksIds = subtasksOfEpic.stream()
+            .map(Subtask::getId)
+            .collect(Collectors.toList());
+
         setSubtasksIds(epicSubtasksIds);
 
         calcEpicStatus(subtasksOfEpic);

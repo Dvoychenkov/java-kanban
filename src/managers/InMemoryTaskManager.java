@@ -6,8 +6,8 @@ import entities.*;
 import utilities.Managers;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-// TODO заменить циклы foreach на stream тут и везде
 public class InMemoryTaskManager implements TaskManager {
     private final HistoryManager historyManager;
     private int idsCount = 1;
@@ -43,42 +43,30 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
-        for (Map.Entry<Integer, Task> taskEntry : tasksIdsToTasks.entrySet()) {
-            historyManager.remove(taskEntry.getKey());
-            sortedByStartTimeTasksAndSubtasks.remove(taskEntry.getValue());
-        }
+        tasksIdsToTasks.values().stream()
+                .peek(task -> historyManager.remove(task.getId()))
+                .forEach(sortedByStartTimeTasksAndSubtasks::remove);
         tasksIdsToTasks.clear();
     }
 
     @Override
     public void deleteAllSubtasks() {
-        Set<Map.Entry<Integer, Subtask>> subtasksEntriesToBeDeleted = new HashSet<>(subtasksIdsToSubtasks.entrySet());
-        for (Map.Entry<Integer, Subtask> subtaskEntry : subtasksEntriesToBeDeleted) {
-            historyManager.remove(subtaskEntry.getKey());
-            sortedByStartTimeTasksAndSubtasks.remove(subtaskEntry.getValue());
-        }
-
+        List<Subtask> allSubtasks = new ArrayList<>(subtasksIdsToSubtasks.values());
         subtasksIdsToSubtasks.clear();
-
-        for (Map.Entry<Integer, Subtask> subtaskEntry : subtasksEntriesToBeDeleted) {
-            Subtask subtask = subtaskEntry.getValue();
-            updateEpicDataBySubtask(subtask);
-            // Удаляемые подзадачи не должны хранить внутри себя старые id
-            subtask.setId(0);
-            subtask.setEpicId(0);
-        }
+        allSubtasks.stream()
+                .peek(subtask -> historyManager.remove(subtask.getId()))
+                .peek(sortedByStartTimeTasksAndSubtasks::remove)
+                .peek(this::updateEpicDataBySubtask)
+                .peek(subtask -> subtask.setId(0)) // Удаляемые подзадачи не должны хранить внутри себя старые id
+                .forEach(subtask -> subtask.setEpicId(0));
     }
 
     @Override
     public void deleteAllEpics() {
-        for (Epic epic : epicsIdsToEpics.values()) {
-            deleteEpicSubtasks(epic);
-            updateEpicData(epic);
-        }
-
-        for (Integer epicId : epicsIdsToEpics.keySet()) {
-            historyManager.remove(epicId);
-        }
+        epicsIdsToEpics.values().stream()
+                .peek(this::deleteEpicSubtasks)
+                .peek(this::updateEpicData)
+                .forEach(epic -> historyManager.remove(epic.getId()));
         epicsIdsToEpics.clear();
     }
 
@@ -295,30 +283,22 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Учитываем, что подзадача должна быть в списке подзадач
-        List<Subtask> subtasks = new ArrayList<>();
-        for (Integer subtasksId : epic.getSubtasksIds()) {
-            if (subtasksIdsToSubtasks.containsKey(subtasksId)) {
-                Subtask subtask = subtasksIdsToSubtasks.get(subtasksId);
-                if (subtask != null) {
-                    subtasks.add(subtask);
-                }
-            }
-        }
-        return subtasks;
+        return epic.getSubtasksIds().stream()
+                .map(subtasksIdsToSubtasks::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteEpicSubtasks(Epic epic) {
-        for (Integer subtaskId : epic.getSubtasksIds()) {
-            // Удаляемые подзадачи не должны хранить внутри себя старые id
-            Subtask subtask = subtasksIdsToSubtasks.get(subtaskId);
-            subtask.setId(0);
-            subtask.setEpicId(0);
-
-            historyManager.remove(subtaskId);
-            subtasksIdsToSubtasks.remove(subtaskId);
-            sortedByStartTimeTasksAndSubtasks.remove(subtask);
-        }
+        epic.getSubtasksIds().stream()
+                .map(subtasksIdsToSubtasks::get)
+                .filter(Objects::nonNull)
+                .peek(subtask -> historyManager.remove(subtask.getId()))
+                .peek(subtask -> subtasksIdsToSubtasks.remove(subtask.getId()))
+                .peek(sortedByStartTimeTasksAndSubtasks::remove)
+                .peek(subtask -> subtask.setId(0)) // Удаляемые подзадачи не должны хранить внутри себя старые id
+                .forEach(subtask -> subtask.setEpicId(0));
     }
 
     @Override

@@ -14,7 +14,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File tasksStorage;
@@ -46,20 +48,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String[] filteredAndSortedLines = Arrays.copyOfRange(lines, 1, lines.length);
             Arrays.sort(filteredAndSortedLines);
 
-            for (String filteredAndSortedLine : filteredAndSortedLines) {
-                Task task = Task.fromString(filteredAndSortedLine);
-                switch (task.getType()) {
-                    case TASK:
-                        addNewTask(task);
-                        break;
-                    case SUBTASK:
-                        addNewSubtask((Subtask) task);
-                        break;
-                    case EPIC:
-                        addNewEpic((Epic) task);
-                        break;
-                }
-            }
+            Arrays.stream(filteredAndSortedLines)
+                .map(Task::fromString)
+                .forEach(task -> {
+                    switch (task.getType()) {
+                        case TASK -> addNewTask(task);
+                        case SUBTASK -> addNewSubtask((Subtask) task);
+                        case EPIC -> addNewEpic((Epic) task);
+                    }
+                });
+
         } catch (IOException e) {
             throw new ManagerLoadException(String.format("Ошибка при загрузке задач из файла '%s': %s",
                     tasksStorage.getAbsolutePath(), e.getMessage()));
@@ -70,15 +68,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tasksStorage))) {
             writer.write("id,type,name,status,description,epic,duration,startTime\n"); // Заголовок CSV
 
-            for (Task task : getTasks()) {
-                writer.write(task + "\n");
-            }
-            for (Subtask subtask : getSubtasks()) {
-                writer.write(subtask + "\n");
-            }
-            for (Epic epic : getEpics()) {
-                writer.write(epic + "\n");
-            }
+            List<Task> allItems = new ArrayList<>(getTasks());
+            allItems.addAll(getSubtasks());
+            allItems.addAll(getEpics());
+            allItems.forEach(task -> {
+                try {
+                    writer.write(task + "\n");
+                } catch (IOException e) {
+                    throw new ManagerSaveException(String.format("Ошибка при сохранении задачи в файл '%s': %s",
+                            tasksStorage.getAbsolutePath(), e.getMessage()));
+                }
+            });
         } catch (IOException e) {
             throw new ManagerSaveException(String.format("Ошибка при сохранении задачи в файл '%s': %s",
                     tasksStorage.getAbsolutePath(), e.getMessage()));

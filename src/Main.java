@@ -17,6 +17,7 @@ public class Main {
         if (Files.exists(storageFile.toPath())) {
             Files.delete(storageFile.toPath());
         }
+        Files.createFile(storageFile.toPath());
         TaskManager taskManager = Managers.getDefault();
 
         // 1. Создаём две обычные задачи
@@ -73,10 +74,7 @@ public class Main {
     }
 
     private static void printHistory(TaskManager taskManager) {
-        List<Task> history = taskManager.getHistory();
-        for (Task task : history) {
-            System.out.println(task);
-        }
+        taskManager.getHistory().forEach(System.out::println);
     }
 }
 
