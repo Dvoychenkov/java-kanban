@@ -1,5 +1,6 @@
 package managers;
 
+import exceptions.ManagerSaveException;
 import interfaces.*;
 import entities.*;
 import utilities.Managers;
@@ -125,11 +126,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = getPrioritizedTasks().stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
-        if (!hasIntersection) {
-            sortedByStartTimeTasksAndSubtasks.add(new Task(task));
+        if (hasIntersection) {
+            throw new ManagerSaveException("Задача пересекается по времени выполнения с уже существующими");
         }
+        sortedByStartTimeTasksAndSubtasks.add(new Task(task));
 
         return id;
     }
@@ -149,11 +151,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = getPrioritizedTasks().stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
-        if (!hasIntersection) {
-            sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
+        if (hasIntersection) {
+            throw new ManagerSaveException("Подзадача пересекается по времени выполнения с уже существующими");
         }
+        sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
 
         return id;
     }
@@ -192,7 +195,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = getPrioritizedTasks().stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
         if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Task(task));
@@ -222,7 +225,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = getPrioritizedTasks().stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
         if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
