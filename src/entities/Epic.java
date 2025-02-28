@@ -6,7 +6,6 @@ import enums.TaskType;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -22,7 +21,7 @@ public class Epic extends Task {
     public Epic(Epic epic) {
         this(epic.title, epic.description, epic.status);
         this.id = epic.id;
-        this.subtasksIds = epic.subtasksIds;
+        this.subtasksIds = new ArrayList<>(epic.subtasksIds);
         this.startTime = epic.startTime;
         this.duration = epic.duration;
         this.endTime = epic.endTime;
@@ -30,14 +29,8 @@ public class Epic extends Task {
 
     public Epic(String title, String description, TaskStatus status, List<Integer> subtasksIds) {
         this(title, description, status);
-        this.subtasksIds = subtasksIds;
-    }
+        this.subtasksIds = new ArrayList<>(subtasksIds);
 
-    public Epic(String title, String description, TaskStatus status, int[] subtasksIds) {
-        this(title, description, status);
-
-        Arrays.stream(subtasksIds)
-                .forEach(subTasksId -> this.subtasksIds.add(subTasksId));
     }
 
     public List<Integer> getSubtasksIds() {
@@ -45,7 +38,7 @@ public class Epic extends Task {
     }
 
     public void setSubtasksIds(List<Integer> subtasksIds) {
-        this.subtasksIds = subtasksIds;
+        this.subtasksIds = new ArrayList<>(subtasksIds);
     }
 
     @Override
@@ -83,35 +76,18 @@ public class Epic extends Task {
     // - Если все подзадачи имеют статус DONE, то и эпик считается завершённым — со статусом DONE.
     // - Во всех остальных случаях статус должен быть IN_PROGRESS.
     private void calcEpicStatus(List<Subtask> subtasksOfEpic) {
-        TaskStatus statusToBeSet = TaskStatus.IN_PROGRESS;
-        boolean hasInProgress = false;
-        boolean hasNew = false;
-        boolean hasDone = false;
-        for (Task subTask : subtasksOfEpic) {
-            switch (subTask.getStatus()) {
-                case NEW:
-                    hasNew = true;
-                    break;
-                case IN_PROGRESS:
-                    hasInProgress = true;
-                    break;
-                case DONE:
-                    hasDone = true;
-                    break;
-            }
+        boolean allNew = subtasksOfEpic.stream()
+                .allMatch(subTask -> subTask.getStatus() == TaskStatus.NEW);
+        boolean allDone = subtasksOfEpic.stream()
+                .allMatch(subTask -> subTask.getStatus() == TaskStatus.DONE);
 
-            if (hasInProgress || (hasNew && hasDone)) {
-                status = statusToBeSet;
-                return;
-            }
+        if (allNew) {
+            status = TaskStatus.NEW;
+        } else if (allDone) {
+            status = TaskStatus.DONE;
+        } else {
+            status = TaskStatus.IN_PROGRESS;
         }
-
-        if (hasDone) {
-            statusToBeSet = TaskStatus.DONE;
-        } else if (hasNew) {
-            statusToBeSet = TaskStatus.NEW;
-        }
-        status = statusToBeSet;
     }
 
     // Обновляем продолжительность задачи, время начала и окончания

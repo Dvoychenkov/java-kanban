@@ -1,8 +1,11 @@
 package managers;
 
+import entities.Epic;
+import entities.Subtask;
+import entities.Task;
 import exceptions.ManagerSaveException;
-import interfaces.*;
-import entities.*;
+import interfaces.HistoryManager;
+import interfaces.TaskManager;
 import utilities.Managers;
 
 import java.util.*;
@@ -41,32 +44,35 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(epicsIdsToEpics.values());
     }
 
+    // Зачищаем информацию о задачах во всех структурах
     @Override
     public void deleteAllTasks() {
-        tasksIdsToTasks.values().stream()
-                .peek(task -> historyManager.remove(task.getId()))
-                .forEach(sortedByStartTimeTasksAndSubtasks::remove);
+        tasksIdsToTasks.values().forEach(task -> {
+            historyManager.remove(task.getId());
+            sortedByStartTimeTasksAndSubtasks.remove(task);
+        });
         tasksIdsToTasks.clear();
     }
 
+    // Зачищаем информацию о подзадачах во всех структурах, затем актуализируем данные эпиков
     @Override
     public void deleteAllSubtasks() {
-        List<Subtask> allSubtasks = new ArrayList<>(subtasksIdsToSubtasks.values());
+        subtasksIdsToSubtasks.values().forEach(subtask -> {
+            historyManager.remove(subtask.getId());
+            sortedByStartTimeTasksAndSubtasks.remove(subtask);
+        });
         subtasksIdsToSubtasks.clear();
-        allSubtasks.stream()
-                .peek(subtask -> historyManager.remove(subtask.getId()))
-                .peek(sortedByStartTimeTasksAndSubtasks::remove)
-                .peek(this::updateEpicDataBySubtask)
-                .peek(subtask -> subtask.setId(0)) // Удаляемые подзадачи не должны хранить внутри себя старые id
-                .forEach(subtask -> subtask.setEpicId(0));
+
+        getEpics().forEach(this::updateEpic);
     }
 
+    // Зачищаем информацию об эпиках во всех структурах и удаляем подзадачи эпиков
     @Override
     public void deleteAllEpics() {
-        epicsIdsToEpics.values().stream()
-                .peek(this::deleteEpicSubtasks)
-                .peek(this::updateEpicData)
-                .forEach(epic -> historyManager.remove(epic.getId()));
+        epicsIdsToEpics.values().forEach(epic -> {
+            historyManager.remove(epic.getId());
+            deleteEpicSubtasks(epic);
+        });
         epicsIdsToEpics.clear();
     }
 
@@ -76,7 +82,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (task == null) {
             return null;
         }
-        historyManager.add(new Task(task));
+        historyManager.add(task);
         return new Task(task);
     }
 
@@ -86,7 +92,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask == null) {
             return null;
         }
-        historyManager.add(new Subtask(subtask));
+        historyManager.add(subtask);
         return new Subtask(subtask);
     }
 
@@ -96,7 +102,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (epic == null) {
             return null;
         }
-        historyManager.add(new Epic(epic));
+        historyManager.add(epic);
         return new Epic(epic);
     }
 
@@ -114,7 +120,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = getPrioritizedTasks().stream()
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
         if (hasIntersection) {
             throw new ManagerSaveException("Задача пересекается по времени выполнения с уже существующими");
@@ -139,7 +145,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = getPrioritizedTasks().stream()
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
         if (hasIntersection) {
             throw new ManagerSaveException("Подзадача пересекается по времени выполнения с уже существующими");
@@ -183,7 +189,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = getPrioritizedTasks().stream()
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
         if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Task(task));
@@ -213,7 +219,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = getPrioritizedTasks().stream()
+        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
         if (!hasIntersection) {
             sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
@@ -234,41 +240,33 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTaskById(int id) {
-        Task task = tasksIdsToTasks.get(id);
+        Task task = tasksIdsToTasks.remove(id);
         if (task == null) {
             return;
         }
         historyManager.remove(id);
-        tasksIdsToTasks.remove(id);
         sortedByStartTimeTasksAndSubtasks.remove(task);
     }
 
     @Override
     public void deleteSubtaskById(int id) {
-        Subtask subtask = subtasksIdsToSubtasks.get(id);
+        Subtask subtask = subtasksIdsToSubtasks.remove(id);
         if (subtask == null) {
             return;
         }
         historyManager.remove(id);
-        subtasksIdsToSubtasks.remove(id);
         sortedByStartTimeTasksAndSubtasks.remove(subtask);
         updateEpicDataBySubtask(subtask);
-
-        // Удаляемые подзадачи не должны хранить внутри себя старые id
-        subtask.setId(0);
-        subtask.setEpicId(0);
     }
 
     @Override
     public void deleteEpicById(int id) {
-        Epic epic = epicsIdsToEpics.get(id);
+        Epic epic = epicsIdsToEpics.remove(id);
         if (epic == null) {
             return;
         }
         historyManager.remove(id);
-        epicsIdsToEpics.remove(id);
         deleteEpicSubtasks(epic);
-        updateEpicData(epic);
     }
 
     @Override
@@ -289,16 +287,16 @@ public class InMemoryTaskManager implements TaskManager {
                 .collect(Collectors.toList());
     }
 
+    // Зачищаем информацию о подзадачах эпика во всех структурах
     @Override
     public void deleteEpicSubtasks(Epic epic) {
         epic.getSubtasksIds().stream()
-                .map(subtasksIdsToSubtasks::get)
+                .map(subtasksIdsToSubtasks::remove)
                 .filter(Objects::nonNull)
-                .peek(subtask -> historyManager.remove(subtask.getId()))
-                .peek(subtask -> subtasksIdsToSubtasks.remove(subtask.getId()))
-                .peek(sortedByStartTimeTasksAndSubtasks::remove)
-                .peek(subtask -> subtask.setId(0)) // Удаляемые подзадачи не должны хранить внутри себя старые id
-                .forEach(subtask -> subtask.setEpicId(0));
+                .forEach(subtask -> {
+                    historyManager.remove(subtask.getId());
+                    sortedByStartTimeTasksAndSubtasks.remove(subtask);
+                });
     }
 
     @Override
@@ -335,9 +333,5 @@ public class InMemoryTaskManager implements TaskManager {
     private void updateEpicData(Epic epic) {
         List<Subtask> subtasksOfEpic = getSubtasksOfEpic(epic);
         epic.updateData(subtasksOfEpic);
-    }
-
-    private List<Task> getPrioritizedTasks() {
-        return new ArrayList<>(sortedByStartTimeTasksAndSubtasks);
     }
 }
