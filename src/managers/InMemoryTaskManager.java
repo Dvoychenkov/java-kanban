@@ -199,9 +199,9 @@ public class InMemoryTaskManager implements TaskManager {
 
         Subtask oldSubtask = null;
         if (subtasksIdsToSubtasks.containsKey(id)) {
-            updateEpicDataBySubtask(subtask);
             oldSubtask = subtasksIdsToSubtasks.get(id);
             subtasksIdsToSubtasks.replace(id, new Subtask(subtask));
+            updateEpicDataBySubtask(subtask);
         }
 
         // Обновляем подзадачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям

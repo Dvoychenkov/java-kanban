@@ -23,6 +23,9 @@ public class Epic extends Task {
         this(epic.title, epic.description, epic.status);
         this.id = epic.id;
         this.subtasksIds = epic.subtasksIds;
+        this.startTime = epic.startTime;
+        this.duration = epic.duration;
+        this.endTime = epic.endTime;
     }
 
     public Epic(String title, String description, TaskStatus status, List<Integer> subtasksIds) {
@@ -34,7 +37,7 @@ public class Epic extends Task {
         this(title, description, status);
 
         Arrays.stream(subtasksIds)
-            .forEach(subTasksId -> this.subtasksIds.add(subTasksId));
+                .forEach(subTasksId -> this.subtasksIds.add(subTasksId));
     }
 
     public List<Integer> getSubtasksIds() {
@@ -45,8 +48,6 @@ public class Epic extends Task {
         this.subtasksIds = subtasksIds;
     }
 
-    // Продолжительность эпика — сумма продолжительностей всех его подзадач.
-    // Время начала — дата старта самой ранней подзадачи, а время завершения — время окончания самой поздней из задач
     @Override
     public LocalDateTime getEndTime() {
         return endTime;
@@ -59,18 +60,20 @@ public class Epic extends Task {
     public void updateData(List<Subtask> subtasksOfEpic) {
         // Если у эпика нет подзадач, то статус должен быть NEW
         if (subtasksOfEpic.isEmpty()) {
-            setStatus(TaskStatus.NEW);
-            setSubtasksIds(new ArrayList<>());
+            status = TaskStatus.NEW;
+            subtasksIds = new ArrayList<>();
+            startTime = null;
+            endTime = null;
+            duration = Duration.ZERO;
             return;
         }
 
         // Обновление списка подзадач эпика
         List<Integer> epicSubtasksIds = subtasksOfEpic.stream()
-            .map(Subtask::getId)
-            .collect(Collectors.toList());
+                .map(Subtask::getId)
+                .collect(Collectors.toList());
 
         setSubtasksIds(epicSubtasksIds);
-
         calcEpicStatus(subtasksOfEpic);
         calcEpicTimes(subtasksOfEpic);
     }
@@ -112,6 +115,8 @@ public class Epic extends Task {
     }
 
     // Обновляем продолжительность задачи, время начала и окончания
+    // Продолжительность эпика — сумма продолжительностей всех его подзадач.
+    // Время начала — дата старта самой ранней подзадачи, а время завершения — время окончания самой поздней из задач
     private void calcEpicTimes(List<Subtask> subtasksOfEpic) {
         if (subtasksOfEpic.isEmpty()) {
             duration = Duration.ZERO;

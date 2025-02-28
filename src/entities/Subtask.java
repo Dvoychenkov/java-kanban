@@ -14,6 +14,8 @@ public class Subtask extends Task {
         this(subtask.title, subtask.description, subtask.status);
         this.id = subtask.id;
         this.epicId = subtask.epicId;
+        this.startTime = subtask.startTime;
+        this.duration = subtask.duration;
     }
 
     public Subtask(String title, String description, TaskStatus status, int epicId) {

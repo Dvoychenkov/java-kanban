@@ -92,7 +92,7 @@ class EpicTest {
     // Проверка неизменности эпика (по всем полям) при добавлении эпика в менеджер
     @Test
     void checkEpicMustNotChangedAfterAddingIntoManager() {
-        Epic epic = new Epic("Subtask 1", "Description 1", TaskStatus.NEW, new int[] {42});
+        Epic epic = new Epic("Subtask 1", "Description 1", TaskStatus.NEW, new int[]{42});
         int epicId = taskManager.addNewEpic(epic);
 
         Epic receivedEpic = taskManager.getEpic(epicId);
