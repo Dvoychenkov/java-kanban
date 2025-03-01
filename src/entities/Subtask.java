@@ -14,6 +14,8 @@ public class Subtask extends Task {
         this(subtask.title, subtask.description, subtask.status);
         this.id = subtask.id;
         this.epicId = subtask.epicId;
+        this.startTime = subtask.startTime;
+        this.duration = subtask.duration;
     }
 
     public Subtask(String title, String description, TaskStatus status, int epicId) {
@@ -31,6 +33,7 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        return String.format("%d,%s,%s,%s,%s,%d", id, type, title, status, description, epicId);
+        return String.format("%d,%s,%s,%s,%s,%d,%d,%s",
+                id, type, title, status, description, epicId, duration.toMinutes(), (startTime == null) ? "" : startTime);
     }
 }

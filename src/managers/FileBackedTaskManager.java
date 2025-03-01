@@ -4,7 +4,6 @@ import entities.Epic;
 import entities.Subtask;
 import entities.Task;
 import enums.TaskStatus;
-import enums.TaskType;
 import exceptions.ManagerSaveException;
 import exceptions.ManagerLoadException;
 import interfaces.TaskManager;
@@ -15,7 +14,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File tasksStorage;
@@ -47,20 +48,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String[] filteredAndSortedLines = Arrays.copyOfRange(lines, 1, lines.length);
             Arrays.sort(filteredAndSortedLines);
 
-            for (String filteredAndSortedLine : filteredAndSortedLines) {
-                Task task = fromString(filteredAndSortedLine);
-                switch (task.getType()) {
-                    case TASK:
-                        addNewTask(task);
-                        break;
-                    case SUBTASK:
-                        addNewSubtask((Subtask) task);
-                        break;
-                    case EPIC:
-                        addNewEpic((Epic) task);
-                        break;
-                }
-            }
+            Arrays.stream(filteredAndSortedLines)
+                .map(Task::fromString)
+                .forEach(task -> {
+                    switch (task.getType()) {
+                        case TASK -> addNewTask(task);
+                        case SUBTASK -> addNewSubtask((Subtask) task);
+                        case EPIC -> addNewEpic((Epic) task);
+                    }
+                });
+
         } catch (IOException e) {
             throw new ManagerLoadException(String.format("Ошибка при загрузке задач из файла '%s': %s",
                     tasksStorage.getAbsolutePath(), e.getMessage()));
@@ -69,67 +66,22 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tasksStorage))) {
-            writer.write("id,type,name,status,description,epic\n"); // Заголовок CSV
+            writer.write("id,type,name,status,description,epic,duration,startTime\n"); // Заголовок CSV
 
-            for (Task task : getTasks()) {
-                writer.write(task + "\n");
-            }
-            for (Subtask subtask : getSubtasks()) {
-                writer.write(subtask + "\n");
-            }
-            for (Epic epic : getEpics()) {
-                writer.write(epic + "\n");
-            }
+            List<Task> allItems = new ArrayList<>(getTasks());
+            allItems.addAll(getSubtasks());
+            allItems.addAll(getEpics());
+            allItems.forEach(task -> {
+                try {
+                    writer.write(task + "\n");
+                } catch (IOException e) {
+                    throw new ManagerSaveException(String.format("Ошибка при сохранении задачи в файл '%s': %s",
+                            tasksStorage.getAbsolutePath(), e.getMessage()));
+                }
+            });
         } catch (IOException e) {
             throw new ManagerSaveException(String.format("Ошибка при сохранении задачи в файл '%s': %s",
                     tasksStorage.getAbsolutePath(), e.getMessage()));
-        }
-    }
-
-    private static Task fromString(String line) {
-        String[] fields = line.trim().split(",");
-        if (fields.length < 5) {
-            throw new ManagerLoadException(String.format("Некорректная длина строки: %s", line));
-        }
-
-        int id;
-        try {
-            id = Integer.parseInt(fields[0]);
-        } catch (NumberFormatException ex) {
-            throw new ManagerLoadException(String.format("Некорректный id строки: %s", line));
-        }
-
-        TaskType type = TaskType.valueOf(fields[1]);
-        String title = fields[2];
-        TaskStatus status = fields[3].isEmpty() ? TaskStatus.NEW : TaskStatus.valueOf(fields[3]);
-        String description = fields[4];
-
-        switch (type) {
-            case TASK:
-                Task task = new Task(title, description, status);
-                task.setId(id);
-                return task;
-            case EPIC:
-                Epic epic = new Epic(title, description, status);
-                epic.setId(id);
-                return epic;
-            case SUBTASK:
-                Subtask subtask = new Subtask(title, description, status);
-                subtask.setId(id);
-
-                if (fields.length > 5 && !fields[5].isEmpty()) {
-                    int epicId;
-                    try {
-                        epicId = Integer.parseInt(fields[5]);
-                    } catch (NumberFormatException ex) {
-                        throw new ManagerLoadException(String.format("Некорректный epic id строки: %s", line));
-                    }
-                    subtask.setEpicId(epicId);
-                }
-
-                return subtask;
-            default:
-                throw new ManagerLoadException(String.format("Неизвестный тип задачи: %s", type));
         }
     }
 

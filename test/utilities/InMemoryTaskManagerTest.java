@@ -59,7 +59,7 @@ class InMemoryTaskManagerTest {
         int taskId = taskManager.addNewTask(task);
         Task savedTask = taskManager.getTask(taskId);
 
-        List<Task> tasksHistory =  taskManager.getHistory();
+        List<Task> tasksHistory = taskManager.getHistory();
         int taskHistorySize = tasksHistory.size();
         Task firstTaskFromHistory = tasksHistory.getFirst();
 
@@ -75,7 +75,7 @@ class InMemoryTaskManagerTest {
         taskManager.updateTask(savedTask);
         taskManager.getTask(taskId);
 
-        List<Task> tasksHistoryAfterUpdate =  taskManager.getHistory();
+        List<Task> tasksHistoryAfterUpdate = taskManager.getHistory();
         int tasksHistoryAfterUpdateSize = tasksHistoryAfterUpdate.size();
         Task firstTaskFromHistoryAfterUpdate = tasksHistoryAfterUpdate.getFirst();
 
