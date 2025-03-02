@@ -4,6 +4,8 @@ import entities.Epic;
 import entities.Subtask;
 import entities.Task;
 import exceptions.ManagerSaveException;
+import exceptions.NotFoundException;
+import exceptions.TaskIntersectionException;
 import interfaces.HistoryManager;
 import interfaces.TaskManager;
 import utilities.Managers;
@@ -18,7 +20,7 @@ public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> tasksIdsToTasks = new HashMap<>();
     private final Map<Integer, Subtask> subtasksIdsToSubtasks = new HashMap<>();
     private final Map<Integer, Epic> epicsIdsToEpics = new HashMap<>();
-    private final Set<Task> sortedByStartTimeTasksAndSubtasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
+    private final Set<Task> prioritizedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
     public InMemoryTaskManager() {
         historyManager = Managers.getDefaultHistory();
@@ -49,7 +51,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteAllTasks() {
         tasksIdsToTasks.values().forEach(task -> {
             historyManager.remove(task.getId());
-            sortedByStartTimeTasksAndSubtasks.remove(task);
+            prioritizedTasks.remove(task);
         });
         tasksIdsToTasks.clear();
     }
@@ -59,7 +61,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteAllSubtasks() {
         subtasksIdsToSubtasks.values().forEach(subtask -> {
             historyManager.remove(subtask.getId());
-            sortedByStartTimeTasksAndSubtasks.remove(subtask);
+            prioritizedTasks.remove(subtask);
         });
         subtasksIdsToSubtasks.clear();
 
@@ -80,7 +82,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Task getTask(int id) {
         Task task = tasksIdsToTasks.getOrDefault(id, null);
         if (task == null) {
-            return null;
+//            return null;
+            throw new NotFoundException(String.format("Задача с id '%d' не найдена", id));
         }
         historyManager.add(task);
         return new Task(task);
@@ -90,7 +93,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Subtask getSubtask(int id) {
         Subtask subtask = subtasksIdsToSubtasks.getOrDefault(id, null);
         if (subtask == null) {
-            return null;
+//            return null;
+            throw new NotFoundException(String.format("Подзадача с id '%d' не найдена", id));
         }
         historyManager.add(subtask);
         return new Subtask(subtask);
@@ -100,7 +104,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Epic getEpic(int id) {
         Epic epic = epicsIdsToEpics.getOrDefault(id, null);
         if (epic == null) {
-            return null;
+//            return null;
+            throw new NotFoundException(String.format("Эпик с id '%d' не найден", id));
         }
         historyManager.add(epic);
         return new Epic(epic);
@@ -120,12 +125,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = prioritizedTasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
         if (hasIntersection) {
-            throw new ManagerSaveException("Задача пересекается по времени выполнения с уже существующими");
+            throw new TaskIntersectionException("Задача пересекается по времени выполнения с уже существующими");
         }
-        sortedByStartTimeTasksAndSubtasks.add(new Task(task));
+        prioritizedTasks.add(new Task(task));
 
         return id;
     }
@@ -145,12 +150,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = prioritizedTasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
         if (hasIntersection) {
-            throw new ManagerSaveException("Подзадача пересекается по времени выполнения с уже существующими");
+            throw new TaskIntersectionException("Подзадача пересекается по времени выполнения с уже существующими");
         }
-        sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
+        prioritizedTasks.add(new Subtask(subtask));
 
         return id;
     }
@@ -182,17 +187,17 @@ public class InMemoryTaskManager implements TaskManager {
 
         // Обновляем задачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям
         if (oldTask != null) {
-            sortedByStartTimeTasksAndSubtasks.remove(oldTask);
+            prioritizedTasks.remove(oldTask);
         }
         if (task.getStartTime() == null) {
             return;
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = prioritizedTasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
         if (!hasIntersection) {
-            sortedByStartTimeTasksAndSubtasks.add(new Task(task));
+            prioritizedTasks.add(new Task(task));
         }
     }
 
@@ -212,17 +217,17 @@ public class InMemoryTaskManager implements TaskManager {
 
         // Обновляем подзадачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям
         if (oldSubtask != null) {
-            sortedByStartTimeTasksAndSubtasks.remove(oldSubtask);
+            prioritizedTasks.remove(oldSubtask);
         }
         if (subtask.getStartTime() == null) {
             return;
         }
 
         // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = sortedByStartTimeTasksAndSubtasks.stream()
+        boolean hasIntersection = prioritizedTasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
         if (!hasIntersection) {
-            sortedByStartTimeTasksAndSubtasks.add(new Subtask(subtask));
+            prioritizedTasks.add(new Subtask(subtask));
         }
     }
 
@@ -245,7 +250,7 @@ public class InMemoryTaskManager implements TaskManager {
             return;
         }
         historyManager.remove(id);
-        sortedByStartTimeTasksAndSubtasks.remove(task);
+        prioritizedTasks.remove(task);
     }
 
     @Override
@@ -255,7 +260,7 @@ public class InMemoryTaskManager implements TaskManager {
             return;
         }
         historyManager.remove(id);
-        sortedByStartTimeTasksAndSubtasks.remove(subtask);
+        prioritizedTasks.remove(subtask);
         updateEpicDataBySubtask(subtask);
     }
 
@@ -295,13 +300,18 @@ public class InMemoryTaskManager implements TaskManager {
                 .filter(Objects::nonNull)
                 .forEach(subtask -> {
                     historyManager.remove(subtask.getId());
-                    sortedByStartTimeTasksAndSubtasks.remove(subtask);
+                    prioritizedTasks.remove(subtask);
                 });
     }
 
     @Override
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        return prioritizedTasks.stream().toList();
     }
 
     // Обновление эпика подзадачи:

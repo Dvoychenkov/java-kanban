@@ -6,6 +6,12 @@ import entities.Task;
 
 import java.util.List;
 
+// TODO поменять имена методов согласно спеке
+//  getTask -> getTaskById
+//  addNewTask -> createTask
+//  deleteTaskById -> deleteTask
+//  getSubtasksOfEpic -> getEpicSubtasks
+//  Удалить лишний getSubtasksOfEpic(Epic epic)
 public interface TaskManager {
     int getNewId();
 
@@ -52,4 +58,6 @@ public interface TaskManager {
     void deleteEpicSubtasks(Epic epic);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
 }
