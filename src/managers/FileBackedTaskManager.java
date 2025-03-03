@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -46,15 +47,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
             // Убираем строку-заголовок и сортируем строки по возрастанию для сохранения порядка id задач
             String[] filteredAndSortedLines = Arrays.copyOfRange(lines, 1, lines.length);
-            Arrays.sort(filteredAndSortedLines);
+            Arrays.sort(filteredAndSortedLines, Comparator.comparingInt(line -> Integer.parseInt(line.split(",")[0])));
 
+            // Добавляем задачи без вызова метода сохранения
             Arrays.stream(filteredAndSortedLines)
                 .map(Task::fromString)
                 .forEach(task -> {
                     switch (task.getType()) {
-                        case TASK -> addNewTask(task);
-                        case SUBTASK -> addNewSubtask((Subtask) task);
-                        case EPIC -> addNewEpic((Epic) task);
+                        case TASK -> super.addNewTask(task);
+                        case SUBTASK -> super.addNewSubtask((Subtask) task);
+                        case EPIC -> super.addNewEpic((Epic) task);
                     }
                 });
 

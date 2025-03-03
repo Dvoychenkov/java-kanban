@@ -1,6 +1,7 @@
 package api;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import interfaces.TaskManager;
@@ -9,6 +10,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,7 +19,7 @@ import static enums.HttpStatusCode.*;
 
 public abstract class BaseHttpHandler implements HttpHandler {
     protected final TaskManager taskManager;
-    protected final Gson gson = new Gson();
+    protected static Gson gson;
     protected static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     protected static final String PATH_DELIMITER = "/";
@@ -25,6 +28,10 @@ public abstract class BaseHttpHandler implements HttpHandler {
 
     BaseHttpHandler(TaskManager taskManager) {
         this.taskManager = taskManager;
+        gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .registerTypeAdapter(Duration.class, new DurationAdapter())
+                .create();
     }
 
     protected void sendText(HttpExchange httpExchange, String text, int statusCode) throws IOException {
@@ -37,11 +44,11 @@ public abstract class BaseHttpHandler implements HttpHandler {
     }
 
     protected void sendNotFound(HttpExchange exchange) throws IOException {
-        sendText(exchange, gson.toJson(Map.of("error", "Not found")), NOT_FOUND.code());
+        sendText(exchange, gson.toJson(Map.of("error", "Entity not found")), NOT_FOUND.code());
     }
 
     protected void sendHasIntersections(HttpExchange exchange) throws IOException {
-        sendText(exchange, gson.toJson(Map.of("error", "Task has time conflict")), NOT_ACCEPTABLE.code());
+        sendText(exchange, gson.toJson(Map.of("error", "Entity has time conflict")), NOT_ACCEPTABLE.code());
     }
 
     protected void sendServerError(HttpExchange exchange) throws IOException {
@@ -49,10 +56,8 @@ public abstract class BaseHttpHandler implements HttpHandler {
     }
 
     private void splitPathByParts(HttpExchange exchange) {
-        if (pathParts == null) {
-            String path = exchange.getRequestURI().getPath();
-            pathParts = path.split(PATH_DELIMITER);
-        }
+        String path = exchange.getRequestURI().getPath();
+        pathParts = path.split(PATH_DELIMITER);
     }
 
     protected int getPathLengthOfRequest(HttpExchange exchange) {

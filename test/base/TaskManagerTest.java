@@ -1,8 +1,11 @@
 package base;
 
-import entities.*;
+import entities.Epic;
+import entities.Subtask;
+import entities.Task;
 import enums.TaskStatus;
-import exceptions.ManagerSaveException;
+import exceptions.NotFoundException;
+import exceptions.TaskIntersectionException;
 import interfaces.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 // Проверка всех реализованных методов интерфейса TaskManager + дополнительные кейсы
 abstract class TaskManagerTest<T extends TaskManager> {
@@ -59,7 +61,9 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Task task = new Task("Task", "Description", TaskStatus.NEW);
         int taskId = taskManager.addNewTask(task);
         taskManager.deleteTaskById(taskId);
-        assertNull(taskManager.getTask(taskId), "Задача не была удалена.");
+        NotFoundException notFoundExceptionotFoundException = assertThrows(NotFoundException.class, () -> taskManager.getTask(taskId));
+        assertTrue(notFoundExceptionotFoundException.getMessage().contains("не найдена"),
+                "Ожидалось исключение о том, что задача не найдена");
     }
 
     @Test
@@ -67,7 +71,9 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Subtask subtask = new Subtask("Subtask", "Description", TaskStatus.NEW);
         int subtaskId = taskManager.addNewTask(subtask);
         taskManager.deleteSubtaskById(subtaskId);
-        assertNull(taskManager.getSubtask(subtaskId), "Подзадача не была удалена.");
+        NotFoundException notFoundExceptionotFoundException = assertThrows(NotFoundException.class, () -> taskManager.getSubtask(subtaskId));
+        assertTrue(notFoundExceptionotFoundException.getMessage().contains("не найдена"),
+                "Ожидалось исключение о том, что подзадача не найдена");
     }
 
     @Test
@@ -75,7 +81,9 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic("Epic", "Description", TaskStatus.NEW);
         int epicId = taskManager.addNewEpic(epic);
         taskManager.deleteEpicById(epicId);
-        assertNull(taskManager.getEpic(epicId), "Эпик не был удален.");
+        NotFoundException notFoundExceptionotFoundException = assertThrows(NotFoundException.class, () -> taskManager.getEpic(epicId));
+        assertTrue(notFoundExceptionotFoundException.getMessage().contains("не найден"),
+                "Ожидалось исключение о том, что эпик не найден");
     }
 
     @Test
@@ -348,8 +356,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Task task2 = new Task("Task entity 2", "Description", TaskStatus.NEW);
         task2.setStartTime(java.time.LocalDateTime.of(2025, 2, 28, 10, 30));
         task2.setDuration(java.time.Duration.ofMinutes(60));
-        ManagerSaveException managerSaveException = assertThrows(ManagerSaveException.class, () -> taskManager.addNewTask(task2));
-        assertTrue(managerSaveException.getMessage().contains("пересекается по времени выполнения"),
+        TaskIntersectionException taskIntersectionException = assertThrows(TaskIntersectionException.class, () -> taskManager.addNewTask(task2));
+        assertTrue(taskIntersectionException.getMessage().contains("пересекается по времени выполнения"),
                 "Ожидалось исключение о пересечении времени");
 
         Task task3 = new Task("Task entity 3", "Description", TaskStatus.NEW);
@@ -370,8 +378,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Task task6 = new Task("Task entity 6", "Description", TaskStatus.NEW);
         task6.setStartTime(java.time.LocalDateTime.of(2025, 2, 28, 9, 0));
         task6.setDuration(java.time.Duration.ofMinutes(60));
-        managerSaveException = assertThrows(ManagerSaveException.class, () -> taskManager.addNewTask(task6));
-        assertTrue(managerSaveException.getMessage().contains("пересекается по времени выполнения"),
+        taskIntersectionException = assertThrows(TaskIntersectionException.class, () -> taskManager.addNewTask(task6));
+        assertTrue(taskIntersectionException.getMessage().contains("пересекается по времени выполнения"),
                 "Ожидалось исключение о пересечении времени");
     }
 

@@ -21,7 +21,7 @@ public class Epic extends Task {
     public Epic(Epic epic) {
         this(epic.title, epic.description, epic.status);
         this.id = epic.id;
-        this.subtasksIds = new ArrayList<>(epic.subtasksIds);
+        setSubtasksIds(epic.subtasksIds);
         this.startTime = epic.startTime;
         this.duration = epic.duration;
         this.endTime = epic.endTime;
@@ -29,8 +29,7 @@ public class Epic extends Task {
 
     public Epic(String title, String description, TaskStatus status, List<Integer> subtasksIds) {
         this(title, description, status);
-        this.subtasksIds = new ArrayList<>(subtasksIds);
-
+        setSubtasksIds(subtasksIds);
     }
 
     public List<Integer> getSubtasksIds() {
@@ -38,7 +37,11 @@ public class Epic extends Task {
     }
 
     public void setSubtasksIds(List<Integer> subtasksIds) {
-        this.subtasksIds = new ArrayList<>(subtasksIds);
+        if (subtasksIds != null) {
+            this.subtasksIds = new ArrayList<>(subtasksIds);
+        } else {
+            this.subtasksIds = new ArrayList<>();
+        }
     }
 
     @Override
@@ -121,4 +124,11 @@ public class Epic extends Task {
                 .orElse(null);
     }
 
+    @Override
+    public String toString() {
+        // Для эпика в строковом представлении не фиксируем текущие значения таймингов,
+        // поскольку они высчитываются на основе его подзадач
+        return String.format("%d,%s,%s,%s,%s,,0,",
+                id, type, title, status, description);
+    }
 }

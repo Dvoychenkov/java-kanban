@@ -39,8 +39,8 @@ public class EpicsHandler extends BaseHttpHandler {
     // В зависимости от длины пути извлекаем все эпики или эпик по id или подзадачи эпика
     private void handleGetEpicsOrEpicByIdOrEpicSubtasks(HttpExchange exchange) throws IOException {
         if (getPathLengthOfRequest(exchange) == 2) {
-            List<Epic> tasks = taskManager.getEpics();
-            sendText(exchange, gson.toJson(tasks), OK.code());
+            List<Epic> epics = taskManager.getEpics();
+            sendText(exchange, gson.toJson(epics), OK.code());
             return;
         }
 
@@ -72,12 +72,13 @@ public class EpicsHandler extends BaseHttpHandler {
     // Если указан id - обновляем эпик, иначе добавляем новый (в ТЗ обновления нет, но для порядка добавлено)
     private void handleCreateOrUpdateEpic(HttpExchange exchange) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), DEFAULT_CHARSET)) {
-            Epic epic = gson.fromJson(reader, Epic.class);
+            // Оборачиваем в создание через конструктор для корректного ведения его полей
+            Epic epic = new Epic(gson.fromJson(reader, Epic.class));
 
             if (epic.getId() == 0) {
-                taskManager.addNewTask(epic);
+                taskManager.addNewEpic(epic);
             } else {
-                taskManager.updateTask(epic);
+                taskManager.updateEpic(epic);
             }
 
             sendText(exchange, null, CREATED.code());
@@ -94,7 +95,7 @@ public class EpicsHandler extends BaseHttpHandler {
         try {
             Optional<Integer> id = extractIdFromRequest(exchange);
             if (id.isPresent()) {
-                taskManager.deleteTaskById(id.get());
+                taskManager.deleteEpicById(id.get());
                 sendText(exchange, null, OK.code());
             }
         } catch (Exception ex) {

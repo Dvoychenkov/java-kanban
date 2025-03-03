@@ -3,7 +3,6 @@ package managers;
 import entities.Epic;
 import entities.Subtask;
 import entities.Task;
-import exceptions.ManagerSaveException;
 import exceptions.NotFoundException;
 import exceptions.TaskIntersectionException;
 import interfaces.HistoryManager;
@@ -117,21 +116,19 @@ public class InMemoryTaskManager implements TaskManager {
             return -1;
         }
 
-        int id = getNewId();
-        task.setId(id);
-        tasksIdsToTasks.put(id, new Task(task));
-        if (task.getStartTime() == null) {
-            return id;
-        }
-
-        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
+        // Проверяем на пересечение с задачами и подзадачами
         boolean hasIntersection = prioritizedTasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
         if (hasIntersection) {
             throw new TaskIntersectionException("Задача пересекается по времени выполнения с уже существующими");
         }
-        prioritizedTasks.add(new Task(task));
 
+        int id = getNewId();
+        task.setId(id);
+        tasksIdsToTasks.put(id, new Task(task));
+        if (task.getStartTime() != null) {
+            prioritizedTasks.add(new Task(task));
+        }
         return id;
     }
 
@@ -141,22 +138,20 @@ public class InMemoryTaskManager implements TaskManager {
             return -1;
         }
 
-        int id = getNewId();
-        subtask.setId(id);
-        subtasksIdsToSubtasks.put(id, new Subtask(subtask));
-        updateEpicDataBySubtask(subtask);
-        if (subtask.getStartTime() == null) {
-            return id;
-        }
-
-        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
+        // Проверяем на пересечение с задачами и подзадачами
         boolean hasIntersection = prioritizedTasks.stream()
                 .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
         if (hasIntersection) {
             throw new TaskIntersectionException("Подзадача пересекается по времени выполнения с уже существующими");
         }
-        prioritizedTasks.add(new Subtask(subtask));
 
+        int id = getNewId();
+        subtask.setId(id);
+        subtasksIdsToSubtasks.put(id, new Subtask(subtask));
+        updateEpicDataBySubtask(subtask);
+        if (subtask.getStartTime() != null) {
+            prioritizedTasks.add(new Subtask(subtask));
+        }
         return id;
     }
 
@@ -177,26 +172,27 @@ public class InMemoryTaskManager implements TaskManager {
         if (task == null) {
             return;
         }
-        int id = task.getId();
 
+        // Проверяем на пересечение с задачами и подзадачами
+        boolean hasIntersection = prioritizedTasks.stream()
+                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
+        if (hasIntersection) {
+            throw new TaskIntersectionException("Задача пересекается по времени выполнения с уже существующими");
+        }
+
+        int id = task.getId();
         Task oldTask = null;
         if (tasksIdsToTasks.containsKey(id)) {
             oldTask = tasksIdsToTasks.get(id);
             tasksIdsToTasks.replace(id, new Task(task));
         }
 
-        // Обновляем задачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям
-        if (oldTask != null) {
+        // Обновляем задачу в отсортированных - удаляем старый объект при наличии и добавляем новый
+        // Проверка на наличие времени для того, чтобы не сломался компаратор дерева
+        if (oldTask != null && oldTask.getStartTime() != null) {
             prioritizedTasks.remove(oldTask);
         }
-        if (task.getStartTime() == null) {
-            return;
-        }
-
-        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = prioritizedTasks.stream()
-                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(task));
-        if (!hasIntersection) {
+        if (task.getStartTime() != null) {
             prioritizedTasks.add(new Task(task));
         }
     }
@@ -206,8 +202,15 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtask == null) {
             return;
         }
-        int id = subtask.getId();
 
+        // Проверяем на пересечение с задачами и подзадачами
+        boolean hasIntersection = prioritizedTasks.stream()
+                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
+        if (hasIntersection) {
+            throw new TaskIntersectionException("Задача пересекается по времени выполнения с уже существующими");
+        }
+
+        int id = subtask.getId();
         Subtask oldSubtask = null;
         if (subtasksIdsToSubtasks.containsKey(id)) {
             oldSubtask = subtasksIdsToSubtasks.get(id);
@@ -215,18 +218,12 @@ public class InMemoryTaskManager implements TaskManager {
             updateEpicDataBySubtask(subtask);
         }
 
-        // Обновляем подзадачу в отсортированных - удаляем старый объект, если он был и добавляем новый, если подходит по условиям
-        if (oldSubtask != null) {
+        // Обновляем подзадачу в отсортированных - удаляем старый объект при наличии и добавляем новый
+        // Проверка на наличие времени для того, чтобы не сломался компаратор дерева
+        if (oldSubtask != null && oldSubtask.getStartTime() != null) {
             prioritizedTasks.remove(oldSubtask);
         }
-        if (subtask.getStartTime() == null) {
-            return;
-        }
-
-        // Проверяем на пересечение с задачами и подзадачами, добавляем в отсортированные, если их нет
-        boolean hasIntersection = prioritizedTasks.stream()
-                .anyMatch(taskOrSubtask -> taskOrSubtask.intersectsByTimeIntervals(subtask));
-        if (!hasIntersection) {
+        if (subtask.getStartTime() != null) {
             prioritizedTasks.add(new Subtask(subtask));
         }
     }

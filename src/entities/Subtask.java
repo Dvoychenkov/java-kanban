@@ -3,11 +3,32 @@ package entities;
 import enums.TaskStatus;
 import enums.TaskType;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
     private int epicId;
 
     public Subtask(String title, String description, TaskStatus status) {
         super(title, description, status, TaskType.SUBTASK);
+    }
+
+    public Subtask(String title, String description, TaskStatus status, int epicId) {
+        this(title, description, status);
+        this.epicId = epicId;
+    }
+
+    public Subtask(String title, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
+        this(title, description, status);
+        this.duration = duration;
+        this.startTime = startTime;
+    }
+
+    public Subtask(String title, String description, TaskStatus status, int epicId, LocalDateTime startTime, Duration duration) {
+        this(title, description, status);
+        this.epicId = epicId;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
     public Subtask(Subtask subtask) {
@@ -16,11 +37,6 @@ public class Subtask extends Task {
         this.epicId = subtask.epicId;
         this.startTime = subtask.startTime;
         this.duration = subtask.duration;
-    }
-
-    public Subtask(String title, String description, TaskStatus status, int epicId) {
-        this(title, description, status);
-        this.epicId = epicId;
     }
 
     public int getEpicId() {
