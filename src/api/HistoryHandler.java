@@ -3,18 +3,18 @@ package api;
 import com.sun.net.httpserver.HttpExchange;
 import entities.Task;
 import enums.HttpMethod;
-import interfaces.TaskManager;
 
 import java.io.IOException;
 import java.util.List;
 
-import static enums.HttpStatusCode.*;
-import static enums.HttpMethod.*;
+import static enums.HttpMethod.GET;
+import static enums.HttpStatusCode.METHOD_NOT_ALLOWED;
+import static enums.HttpStatusCode.OK;
 
 public class HistoryHandler extends BaseHttpHandler {
 
-    public HistoryHandler(TaskManager taskManager) {
-        super(taskManager);
+    public HistoryHandler(HttpTaskServer httpTaskServer) {
+        super(httpTaskServer);
     }
 
     @Override

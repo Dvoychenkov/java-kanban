@@ -6,7 +6,6 @@ import entities.Subtask;
 import enums.HttpMethod;
 import exceptions.NotFoundException;
 import exceptions.TaskIntersectionException;
-import interfaces.TaskManager;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,8 +16,8 @@ import static enums.HttpStatusCode.*;
 
 public class EpicsHandler extends BaseHttpHandler {
 
-    public EpicsHandler(TaskManager taskManager) {
-        super(taskManager);
+    public EpicsHandler(HttpTaskServer httpTaskServer) {
+        super(httpTaskServer);
     }
 
     @Override

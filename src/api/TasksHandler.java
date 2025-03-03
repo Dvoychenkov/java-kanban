@@ -5,7 +5,6 @@ import entities.Task;
 import enums.HttpMethod;
 import exceptions.NotFoundException;
 import exceptions.TaskIntersectionException;
-import interfaces.TaskManager;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,8 +15,8 @@ import static enums.HttpStatusCode.*;
 
 public class TasksHandler extends BaseHttpHandler {
 
-    public TasksHandler(TaskManager taskManager) {
-        super(taskManager);
+    public TasksHandler(HttpTaskServer httpTaskServer) {
+        super(httpTaskServer);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package api;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import interfaces.TaskManager;
@@ -10,8 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,19 +16,17 @@ import static enums.HttpStatusCode.*;
 
 public abstract class BaseHttpHandler implements HttpHandler {
     protected final TaskManager taskManager;
-    protected static Gson gson;
+    protected final Gson gson;
+
     protected static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     protected static final String PATH_DELIMITER = "/";
     protected static final int ID_PATH_INDEX = 2;
     protected String[] pathParts;
 
-    BaseHttpHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
-        gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
-                .registerTypeAdapter(Duration.class, new DurationAdapter())
-                .create();
+    BaseHttpHandler(HttpTaskServer httpTaskServer) {
+        this.taskManager = httpTaskServer.getTaskManager();
+        this.gson = httpTaskServer.getGson();
     }
 
     protected void sendText(HttpExchange httpExchange, String text, int statusCode) throws IOException {
@@ -39,7 +34,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
         httpExchange.sendResponseHeaders(statusCode, 0);
         try (OutputStream os = httpExchange.getResponseBody()) {
             text = (text == null) ? "" : text;
-            os.write(text.getBytes());
+            os.write(text.getBytes(DEFAULT_CHARSET));
         }
     }
 
