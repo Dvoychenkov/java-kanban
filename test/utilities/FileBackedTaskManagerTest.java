@@ -38,11 +38,11 @@ class FileBackedTaskManagerTest {
 
         // Наполнение задачами
         Task task1 = new Task("Task 1", "Description 1", TaskStatus.NEW);
-        taskManager.addNewTask(task1);
+        taskManager.createTask(task1);
         Epic epic = new Epic("Epic 1", "Epic description", TaskStatus.NEW);
-        taskManager.addNewEpic(epic);
+        taskManager.createEpic(epic);
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask description", TaskStatus.DONE, epic.getId());
-        taskManager.addNewSubtask(subtask1);
+        taskManager.createSubtask(subtask1);
 
         assertFalse(taskManager.getTasks().isEmpty(), "Менеджер не должен содержать пустой список задач после наполнения");
         assertFalse(taskManager.getSubtasks().isEmpty(),
@@ -78,8 +78,8 @@ class FileBackedTaskManagerTest {
     void shouldSaveAndLoadMultipleTasks() {
         Task task1 = new Task("Task 1", "Description 1", TaskStatus.NEW);
         Task task2 = new Task("Task 2", "Description 2", TaskStatus.IN_PROGRESS);
-        taskManager.addNewTask(task1);
-        taskManager.addNewTask(task2);
+        taskManager.createTask(task1);
+        taskManager.createTask(task2);
 
         List<Task> savedTasks = taskManager.getTasks();
         assertEquals(2, savedTasks.size(), "Должно быть сохранено 2 задачи");
@@ -96,10 +96,10 @@ class FileBackedTaskManagerTest {
     @Test
     void shouldCorrectlySaveAndLoadEpicsWithSubtasks() {
         Epic epic = new Epic("Epic 1", "Epic description", TaskStatus.NEW);
-        taskManager.addNewEpic(epic);
+        taskManager.createEpic(epic);
 
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask description", TaskStatus.DONE, epic.getId());
-        taskManager.addNewSubtask(subtask1);
+        taskManager.createSubtask(subtask1);
 
         assertEquals(1, taskManager.getEpics().size(), "Должен быть 1 эпик");
         assertEquals(1, taskManager.getSubtasks().size(), "Должна быть 1 подзадача");

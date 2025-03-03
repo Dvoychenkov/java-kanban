@@ -45,7 +45,7 @@ public class SubtasksHandler extends BaseHttpHandler {
         try {
             Optional<Integer> id = extractIdFromRequest(exchange);
             if (id.isPresent()) {
-                Subtask subtask = taskManager.getSubtask(id.get());
+                Subtask subtask = taskManager.getSubtaskById(id.get());
                 sendText(exchange, gson.toJson(subtask), OK.code());
             } else {
                 sendNotFound(exchange);
@@ -64,7 +64,7 @@ public class SubtasksHandler extends BaseHttpHandler {
             Subtask subtask = gson.fromJson(reader, Subtask.class);
 
             if (subtask.getId() == 0) {
-                taskManager.addNewSubtask(subtask);
+                taskManager.createSubtask(subtask);
             } else {
                 taskManager.updateSubtask(subtask);
             }
@@ -83,7 +83,7 @@ public class SubtasksHandler extends BaseHttpHandler {
         try {
             Optional<Integer> id = extractIdFromRequest(exchange);
             if (id.isPresent()) {
-                taskManager.deleteSubtaskById(id.get());
+                taskManager.deleteSubtask(id.get());
                 sendText(exchange, null, OK.code());
             }
         } catch (Exception ex) {

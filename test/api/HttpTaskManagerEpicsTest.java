@@ -49,8 +49,8 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
     public void shouldGetAllEpics() throws IOException, InterruptedException {
         Epic epic1 = new Epic("Epic 1", "Epic 1 Description", TaskStatus.NEW);
         Epic epic2 = new Epic("Epic 2", "Epic 2 Description", TaskStatus.NEW);
-        manager.addNewEpic(epic1);
-        manager.addNewEpic(epic2);
+        manager.createEpic(epic1);
+        manager.createEpic(epic2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl))
@@ -70,7 +70,7 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
     @Test
     public void shouldGetEpicById() throws IOException, InterruptedException {
         Epic epic = new Epic("Epic 1", "Epic 1 Description", TaskStatus.NEW);
-        int epicId = manager.addNewEpic(epic);
+        int epicId = manager.createEpic(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + epicId))
@@ -89,7 +89,7 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
     @Test
     public void shouldUpdateEpic() throws IOException, InterruptedException {
         Epic epic = new Epic("Epic 1", "Epic 1 Description", TaskStatus.NEW);
-        int epicId = manager.addNewEpic(epic);
+        int epicId = manager.createEpic(epic);
 
         Epic updatedEpic = new Epic("Epic 1 updated", "Epic 1 Description updated", TaskStatus.NEW);
         updatedEpic.setId(epicId);
@@ -103,7 +103,7 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(CREATED.code(), response.statusCode(), "Некорректный статус ответа при обновлении эпика");
 
-        Epic storedEpic = manager.getEpic(epicId);
+        Epic storedEpic = manager.getEpicById(epicId);
         assertNotNull(storedEpic, "Эпик должна существовать");
         assertEquals(updatedEpic.getTitle(), storedEpic.getTitle(), "Имя эпика не обновилось");
         assertEquals(updatedEpic.getDescription(), storedEpic.getDescription(), "Описание эпика не обновилось");
@@ -112,7 +112,7 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
     @Test
     public void shouldDeleteEpic() throws IOException, InterruptedException {
         Epic epic = new Epic("Epic 1", "Epic 1 Description", TaskStatus.NEW);
-        int epicId = manager.addNewEpic(epic);
+        int epicId = manager.createEpic(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + epicId))
@@ -123,7 +123,7 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
         assertEquals(OK.code(), response.statusCode(), "Некорректный статус ответа при удалении эпика");
 
         NotFoundException notFoundExceptionotFoundException = assertThrows(NotFoundException.class,
-                () -> manager.getEpic(epicId));
+                () -> manager.getEpicById(epicId));
         assertTrue(notFoundExceptionotFoundException.getMessage().contains("не найден"),
                 "Ожидалось исключение о том, что эпик не найден");
     }
@@ -143,14 +143,14 @@ abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends Ht
     @Test
     public void shouldGetEpicSubtasks() throws IOException, InterruptedException {
         Epic epic = new Epic("Epic 1", "Epic 1 Description", TaskStatus.NEW);
-        int epicId = manager.addNewEpic(epic);
+        int epicId = manager.createEpic(epic);
 
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW, epicId,
                 LocalDateTime.now(), Duration.ofMinutes(10));
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 Description", TaskStatus.IN_PROGRESS, epicId,
                 LocalDateTime.now().plusMinutes(20), Duration.ofMinutes(15));
-        manager.addNewSubtask(subtask1);
-        manager.addNewSubtask(subtask2);
+        manager.createSubtask(subtask1);
+        manager.createSubtask(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + epicId + "/subtasks"))

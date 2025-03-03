@@ -30,20 +30,20 @@ abstract class HttpTaskManagerHistoryTest<T extends TaskManager> extends HttpTas
                 LocalDateTime.now(), Duration.ofMinutes(10));
         Task task2 = new Task("Task 2", "Task 2 Description", TaskStatus.NEW,
                 LocalDateTime.now().plusMinutes(60), Duration.ofMinutes(60));
-        int taskId1 = manager.addNewTask(task1);
-        int taskId2 = manager.addNewTask(task2);
+        int taskId1 = manager.createTask(task1);
+        int taskId2 = manager.createTask(task2);
 
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW,
                 LocalDateTime.now().plusMinutes(120), Duration.ofMinutes(60));
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 Description", TaskStatus.NEW,
                 LocalDateTime.now().plusMinutes(180), Duration.ofMinutes(60));
-        int subtaskId1 = manager.addNewSubtask(subtask1);
-        int subtaskId2 = manager.addNewSubtask(subtask2);
+        int subtaskId1 = manager.createSubtask(subtask1);
+        int subtaskId2 = manager.createSubtask(subtask2);
 
-        manager.getTask(taskId1);
-        manager.getSubtask(subtaskId1);
-        manager.getTask(taskId2);
-        manager.getSubtask(subtaskId2);
+        manager.getTaskById(taskId1);
+        manager.getSubtaskById(subtaskId1);
+        manager.getTaskById(taskId2);
+        manager.getSubtaskById(subtaskId2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl))

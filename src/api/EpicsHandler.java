@@ -48,14 +48,14 @@ public class EpicsHandler extends BaseHttpHandler {
             if (id.isPresent()) {
                 // Дополнительная логика обработки по проверке, пытаемся мы получить подзадачи или эпик
                 if (getPathLengthOfRequest(exchange) < 4) {
-                    Epic epic = taskManager.getEpic(id.get());
+                    Epic epic = taskManager.getEpicById(id.get());
                     sendText(exchange, gson.toJson(epic), OK.code());
                     return;
                 }
                 if (!pathParts[3].equals("subtasks")) {
                     sendNotFound(exchange);
                 }
-                List<Subtask> epicSubtasks = taskManager.getSubtasksOfEpic(id.get());
+                List<Subtask> epicSubtasks = taskManager.getEpicSubtasks(id.get());
                 sendText(exchange, gson.toJson(epicSubtasks), OK.code());
             } else {
                 sendNotFound(exchange);
@@ -75,7 +75,7 @@ public class EpicsHandler extends BaseHttpHandler {
             Epic epic = new Epic(gson.fromJson(reader, Epic.class));
 
             if (epic.getId() == 0) {
-                taskManager.addNewEpic(epic);
+                taskManager.createEpic(epic);
             } else {
                 taskManager.updateEpic(epic);
             }
@@ -94,7 +94,7 @@ public class EpicsHandler extends BaseHttpHandler {
         try {
             Optional<Integer> id = extractIdFromRequest(exchange);
             if (id.isPresent()) {
-                taskManager.deleteEpicById(id.get());
+                taskManager.deleteEpic(id.get());
                 sendText(exchange, null, OK.code());
             }
         } catch (Exception ex) {

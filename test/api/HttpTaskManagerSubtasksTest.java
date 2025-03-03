@@ -32,8 +32,8 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
         super.beforeEach();
 
         epic = new Epic("Epic title", "Epic description", TaskStatus.NEW);
-        int epicId = manager.addNewEpic(epic);
-        epic = manager.getEpic(epicId);
+        int epicId = manager.createEpic(epic);
+        epic = manager.getEpicById(epicId);
     }
 
     @Test
@@ -62,8 +62,8 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
                 LocalDateTime.now(), Duration.ofMinutes(10));
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 Description", TaskStatus.IN_PROGRESS, epic.getId(),
                 LocalDateTime.now().plusMinutes(20), Duration.ofMinutes(15));
-        manager.addNewSubtask(subtask1);
-        manager.addNewSubtask(subtask2);
+        manager.createSubtask(subtask1);
+        manager.createSubtask(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl))
@@ -84,7 +84,7 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
     public void shouldGetSubtaskById() throws IOException, InterruptedException {
         Subtask subtask = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.now(), Duration.ofMinutes(5));
-        int subtaskId = manager.addNewSubtask(subtask);
+        int subtaskId = manager.createSubtask(subtask);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + subtaskId))
@@ -104,7 +104,7 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
     public void shouldUpdateSubtask() throws IOException, InterruptedException {
         Subtask subtask = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.now(), Duration.ofMinutes(5));
-        int subtaskId = manager.addNewSubtask(subtask);
+        int subtaskId = manager.createSubtask(subtask);
 
         Subtask updatedSubtask = new Subtask("Subtask 1 updated", "Subtask 1 Description updated",
                 TaskStatus.IN_PROGRESS, epic.getId(), LocalDateTime.now().plusMinutes(30), Duration.ofMinutes(10));
@@ -119,7 +119,7 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(CREATED.code(), response.statusCode(), "Некорректный статус ответа при обновлении подзадачи");
 
-        Subtask storedSubtask = manager.getSubtask(subtaskId);
+        Subtask storedSubtask = manager.getSubtaskById(subtaskId);
         assertNotNull(storedSubtask, "Подзадача должна существовать");
         assertEquals(updatedSubtask.getTitle(), storedSubtask.getTitle(), "Имя подзадачи не обновилось");
         assertEquals(updatedSubtask.getDescription(), storedSubtask.getDescription(), "Описание подзадачи не обновилось");
@@ -130,7 +130,7 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
     public void shouldDeleteSubtask() throws IOException, InterruptedException {
         Subtask subtask = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.now(), Duration.ofMinutes(5));
-        int subtaskId = manager.addNewSubtask(subtask);
+        int subtaskId = manager.createSubtask(subtask);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + subtaskId))
@@ -141,7 +141,7 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
         assertEquals(OK.code(), response.statusCode(), "Некорректный статус ответа при удалении подзадачи");
 
         NotFoundException notFoundExceptionotFoundException = assertThrows(NotFoundException.class,
-                () -> manager.getSubtask(subtaskId));
+                () -> manager.getSubtaskById(subtaskId));
         assertTrue(notFoundExceptionotFoundException.getMessage().contains("не найдена"),
                 "Ожидалось исключение о том, что подзадача не найдена");
     }
@@ -162,7 +162,7 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
     public void shouldReturn406IfSubtaskOverlaps() throws IOException, InterruptedException {
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.of(2025, 3, 1, 10, 0), Duration.ofMinutes(60));
-        manager.addNewSubtask(subtask1);
+        manager.createSubtask(subtask1);
 
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.of(2025, 3, 1, 10, 30), Duration.ofMinutes(30));
@@ -182,11 +182,11 @@ abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTa
     public void shouldReturn406IfUpdatedSubtaskOverlaps() throws IOException, InterruptedException {
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.of(2025, 3, 1, 10, 0), Duration.ofMinutes(60));
-        manager.addNewSubtask(subtask1);
+        manager.createSubtask(subtask1);
 
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 Description", TaskStatus.NEW, epic.getId(),
                 LocalDateTime.of(2025, 3, 1, 12, 0), Duration.ofMinutes(30));
-        manager.addNewSubtask(subtask2);
+        manager.createSubtask(subtask2);
 
         subtask2.setStartTime(LocalDateTime.of(2025, 3, 1, 10, 30)); // Конфликт по времени
         String subtaskJson = gson.toJson(subtask2);

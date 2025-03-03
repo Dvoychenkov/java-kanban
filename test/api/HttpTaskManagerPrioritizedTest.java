@@ -29,15 +29,15 @@ abstract class HttpTaskManagerPrioritizedTest<T extends TaskManager> extends Htt
                 LocalDateTime.now().plusMinutes(120), Duration.ofMinutes(59));
         Task task2 = new Task("Task 2", "Task 2 Description", TaskStatus.NEW,
                 LocalDateTime.now().plusMinutes(60), Duration.ofMinutes(59));
-        manager.addNewTask(task1);
-        manager.addNewTask(task2);
+        manager.createTask(task1);
+        manager.createTask(task2);
 
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask 1 Description", TaskStatus.NEW,
                 LocalDateTime.now().plusMinutes(240), Duration.ofMinutes(59));
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 Description", TaskStatus.NEW,
                 LocalDateTime.now().plusMinutes(0), Duration.ofMinutes(59));
-        manager.addNewSubtask(subtask1);
-        manager.addNewSubtask(subtask2);
+        manager.createSubtask(subtask1);
+        manager.createSubtask(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl))

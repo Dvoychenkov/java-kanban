@@ -32,7 +32,7 @@ class InMemoryTaskManagerTest {
         assertEquals(1, newId, "Менеджер задач не вернул новый id");
 
         Task task = new Task("Test addNewTask", "Test addNewTask description", TaskStatus.NEW);
-        taskManager.addNewTask(task);
+        taskManager.createTask(task);
 
         assertNotNull(taskManager.getTasks(), "Менеджер задач не добавил новую задачу");
     }
@@ -56,8 +56,8 @@ class InMemoryTaskManagerTest {
     @Test
     void addLittleMoreTasksToHistory() {
         Task task = new Task("Task title 1", "Description 1", TaskStatus.NEW);
-        int taskId = taskManager.addNewTask(task);
-        Task savedTask = taskManager.getTask(taskId);
+        int taskId = taskManager.createTask(task);
+        Task savedTask = taskManager.getTaskById(taskId);
 
         List<Task> tasksHistory = taskManager.getHistory();
         int taskHistorySize = tasksHistory.size();
@@ -73,7 +73,7 @@ class InMemoryTaskManagerTest {
         savedTask.setStatus(TaskStatus.IN_PROGRESS);
 
         taskManager.updateTask(savedTask);
-        taskManager.getTask(taskId);
+        taskManager.getTaskById(taskId);
 
         List<Task> tasksHistoryAfterUpdate = taskManager.getHistory();
         int tasksHistoryAfterUpdateSize = tasksHistoryAfterUpdate.size();

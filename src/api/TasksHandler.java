@@ -45,7 +45,7 @@ public class TasksHandler extends BaseHttpHandler {
         try {
             Optional<Integer> id = extractIdFromRequest(exchange);
             if (id.isPresent()) {
-                Task task = taskManager.getTask(id.get());
+                Task task = taskManager.getTaskById(id.get());
                 sendText(exchange, gson.toJson(task), OK.code());
             } else {
                 sendNotFound(exchange);
@@ -64,7 +64,7 @@ public class TasksHandler extends BaseHttpHandler {
             Task task = gson.fromJson(reader, Task.class);
 
             if (task.getId() == 0) {
-                taskManager.addNewTask(task);
+                taskManager.createTask(task);
             } else {
                 taskManager.updateTask(task);
             }
@@ -83,7 +83,7 @@ public class TasksHandler extends BaseHttpHandler {
         try {
             Optional<Integer> id = extractIdFromRequest(exchange);
             if (id.isPresent()) {
-                taskManager.deleteTaskById(id.get());
+                taskManager.deleteTask(id.get());
                 sendText(exchange, null, OK.code());
             }
         } catch (Exception ex) {

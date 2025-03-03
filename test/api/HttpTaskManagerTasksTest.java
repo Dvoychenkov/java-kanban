@@ -50,8 +50,8 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
                 LocalDateTime.now(), Duration.ofMinutes(10));
         Task task2 = new Task("Task 2", "Task 2 Description", TaskStatus.IN_PROGRESS,
                 LocalDateTime.now().plusMinutes(20), Duration.ofMinutes(15));
-        manager.addNewTask(task1);
-        manager.addNewTask(task2);
+        manager.createTask(task1);
+        manager.createTask(task2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl))
@@ -72,7 +72,7 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
     public void shouldGetTaskById() throws IOException, InterruptedException {
         Task task = new Task("Task 1", "Task 1 Description", TaskStatus.NEW,
                 LocalDateTime.now(), Duration.ofMinutes(5));
-        int taskId = manager.addNewTask(task);
+        int taskId = manager.createTask(task);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + taskId))
@@ -92,7 +92,7 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
     public void shouldUpdateTask() throws IOException, InterruptedException {
         Task task = new Task("Task 1", "Task 1 Description", TaskStatus.NEW,
                 LocalDateTime.now(), Duration.ofMinutes(5));
-        int taskId = manager.addNewTask(task);
+        int taskId = manager.createTask(task);
 
         Task updatedTask = new Task("Task 1 updated", "Task 1 Description updated", TaskStatus.IN_PROGRESS,
                 LocalDateTime.now().plusMinutes(30), Duration.ofMinutes(10));
@@ -107,7 +107,7 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         assertEquals(CREATED.code(), response.statusCode(), "Некорректный статус ответа при обновлении задачи");
 
-        Task storedTask = manager.getTask(taskId);
+        Task storedTask = manager.getTaskById(taskId);
         assertNotNull(storedTask, "Задача должна существовать");
         assertEquals(updatedTask.getTitle(), storedTask.getTitle(), "Имя задачи не обновилось");
         assertEquals(updatedTask.getDescription(), storedTask.getDescription(), "Описание задачи не обновилось");
@@ -118,7 +118,7 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
     public void shouldDeleteTask() throws IOException, InterruptedException {
         Task task = new Task("Task 1", "Task 1 Description", TaskStatus.NEW,
                 LocalDateTime.now(), Duration.ofMinutes(5));
-        int taskId = manager.addNewTask(task);
+        int taskId = manager.createTask(task);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + taskId))
@@ -129,7 +129,7 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
         assertEquals(OK.code(), response.statusCode(), "Некорректный статус ответа при удалении задачи");
 
         NotFoundException notFoundExceptionotFoundException = assertThrows(NotFoundException.class,
-                () -> manager.getTask(taskId));
+                () -> manager.getTaskById(taskId));
         assertTrue(notFoundExceptionotFoundException.getMessage().contains("не найдена"),
                 "Ожидалось исключение о том, что задача не найдена");
     }
@@ -150,7 +150,7 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
     public void shouldReturn406IfTaskOverlaps() throws IOException, InterruptedException {
         Task task1 = new Task("Task 1", "Task 1 Description", TaskStatus.NEW,
                 LocalDateTime.of(2025, 3, 1, 10, 0), Duration.ofMinutes(60));
-        manager.addNewTask(task1);
+        manager.createTask(task1);
 
         Task task2 = new Task("Task 2", "Task 2 Description", TaskStatus.NEW,
                 LocalDateTime.of(2025, 3, 1, 10, 30), Duration.ofMinutes(30));
@@ -170,11 +170,11 @@ abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskS
     public void shouldReturn406IfUpdatedTaskOverlaps() throws IOException, InterruptedException {
         Task task1 = new Task("Task 1", "Task 1 Description", TaskStatus.NEW,
                 LocalDateTime.of(2025, 3, 1, 10, 0), Duration.ofMinutes(60));
-        manager.addNewTask(task1);
+        manager.createTask(task1);
 
         Task task2 = new Task("Task 2", "Task 2 Description", TaskStatus.NEW,
                 LocalDateTime.of(2025, 3, 1, 12, 0), Duration.ofMinutes(30));
-        manager.addNewTask(task2);
+        manager.createTask(task2);
 
         task2.setStartTime(LocalDateTime.of(2025, 3, 1, 10, 30)); // Конфликт по времени
         String taskJson = gson.toJson(task2);
