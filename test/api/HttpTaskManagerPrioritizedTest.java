@@ -1,19 +1,13 @@
 package api;
 
-import com.google.gson.Gson;
 import entities.Subtask;
 import entities.Task;
 import enums.TaskStatus;
 import interfaces.TaskManager;
-import managers.InMemoryTaskManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -22,40 +16,11 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class HttpTaskManagerPrioritizedTest {
-    static TaskManager manager;
-    static HttpTaskServer taskServer;
-    static Gson gson;
-    static HttpClient client;
-    static String baseTestUrl;
+abstract class HttpTaskManagerPrioritizedTest<T extends TaskManager> extends HttpTaskServerTest<T> {
 
-    @BeforeAll
-    public static void beforeAll() {
-        client = HttpClient.newHttpClient();
-
-        String serverProtocol = "http://";
-        int serverPort = 8080;
-        String serverName = "localhost";
-        String serverUrl = String.format("%s%s:%d", serverProtocol, serverName, serverPort);
-        String prioritizedPath = "/prioritized/";
-        baseTestUrl = serverUrl + prioritizedPath;
-    }
-
-    @BeforeEach
-    public void beforeEach() throws IOException {
-        manager = new InMemoryTaskManager();
-        taskServer = new HttpTaskServer(manager);
-        gson = taskServer.getGson();
-        taskServer.start();
-    }
-
-    @AfterEach
-    public void afterEach() {
-        if (taskServer == null) {
-            return;
-        }
-        taskServer.stop();
-        taskServer = null;
+    HttpTaskManagerPrioritizedTest() {
+        super();
+        baseUrl = baseUrl + "/prioritized/";
     }
 
     @Test
@@ -75,7 +40,7 @@ public class HttpTaskManagerPrioritizedTest {
         manager.addNewSubtask(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .GET()
                 .build();
 

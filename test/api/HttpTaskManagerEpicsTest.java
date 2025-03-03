@@ -1,21 +1,15 @@
 package api;
 
-import com.google.gson.Gson;
 import entities.Epic;
 import entities.Subtask;
 import entities.Task;
 import enums.TaskStatus;
 import exceptions.NotFoundException;
 import interfaces.TaskManager;
-import managers.InMemoryTaskManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -25,40 +19,11 @@ import java.util.List;
 import static enums.HttpStatusCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HttpTaskManagerEpicsTest {
-    static TaskManager manager;
-    static HttpTaskServer taskServer;
-    static Gson gson;
-    static HttpClient client;
-    static String baseTestUrl;
+abstract public class HttpTaskManagerEpicsTest<T extends TaskManager> extends HttpTaskServerTest<T> {
 
-    @BeforeAll
-    public static void beforeAll() {
-        client = HttpClient.newHttpClient();
-
-        String serverProtocol = "http://";
-        int serverPort = 8080;
-        String serverName = "localhost";
-        String serverUrl = String.format("%s%s:%d", serverProtocol, serverName, serverPort);
-        String epicsPath = "/epics/";
-        baseTestUrl = serverUrl + epicsPath;
-    }
-
-    @BeforeEach
-    public void beforeEach() throws IOException {
-        manager = new InMemoryTaskManager();
-        taskServer = new HttpTaskServer(manager);
-        gson = taskServer.getGson();
-        taskServer.start();
-    }
-
-    @AfterEach
-    public void afterEach() {
-        if (taskServer == null) {
-            return;
-        }
-        taskServer.stop();
-        taskServer = null;
+    HttpTaskManagerEpicsTest() {
+        super();
+        baseUrl = baseUrl + "/epics/";
     }
 
     @Test
@@ -67,7 +32,7 @@ public class HttpTaskManagerEpicsTest {
         String epicJson = gson.toJson(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(epicJson))
                 .build();
 
@@ -88,7 +53,7 @@ public class HttpTaskManagerEpicsTest {
         manager.addNewEpic(epic2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .GET()
                 .build();
 
@@ -108,7 +73,7 @@ public class HttpTaskManagerEpicsTest {
         int epicId = manager.addNewEpic(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + epicId))
+                .uri(URI.create(baseUrl + epicId))
                 .GET()
                 .build();
 
@@ -131,7 +96,7 @@ public class HttpTaskManagerEpicsTest {
         String updatedEpicJson = gson.toJson(updatedEpic);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + epicId))
+                .uri(URI.create(baseUrl + epicId))
                 .POST(HttpRequest.BodyPublishers.ofString(updatedEpicJson))
                 .build();
 
@@ -150,7 +115,7 @@ public class HttpTaskManagerEpicsTest {
         int epicId = manager.addNewEpic(epic);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + epicId))
+                .uri(URI.create(baseUrl + epicId))
                 .DELETE()
                 .build();
 
@@ -166,7 +131,7 @@ public class HttpTaskManagerEpicsTest {
     @Test
     public void shouldReturn404IfEpicNotFound() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + 999))
+                .uri(URI.create(baseUrl + 999))
                 .GET()
                 .build();
 
@@ -188,7 +153,7 @@ public class HttpTaskManagerEpicsTest {
         manager.addNewSubtask(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + epicId + "/subtasks"))
+                .uri(URI.create(baseUrl + epicId + "/subtasks"))
                 .GET()
                 .build();
 
@@ -207,7 +172,7 @@ public class HttpTaskManagerEpicsTest {
     @Test
     public void shouldReturn404IfEpicNotFoundWhileGettingSubtasks() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + 999 + "/subtasks"))
+                .uri(URI.create(baseUrl + 999 + "/subtasks"))
                 .GET()
                 .build();
 

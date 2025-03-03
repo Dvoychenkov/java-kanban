@@ -1,19 +1,13 @@
 package api;
 
-import com.google.gson.Gson;
 import entities.Task;
 import enums.TaskStatus;
 import exceptions.NotFoundException;
 import interfaces.TaskManager;
-import managers.InMemoryTaskManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -23,40 +17,11 @@ import java.util.List;
 import static enums.HttpStatusCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HttpTaskManagerTasksTest {
-    static TaskManager manager;
-    static HttpTaskServer taskServer;
-    static Gson gson;
-    static HttpClient client;
-    static String baseTestUrl;
+abstract class HttpTaskManagerTasksTest<T extends TaskManager> extends HttpTaskServerTest<T> {
 
-    @BeforeAll
-    public static void beforeAll() {
-        client = HttpClient.newHttpClient();
-
-        String serverProtocol = "http://";
-        int serverPort = 8080;
-        String serverName = "localhost";
-        String serverUrl = String.format("%s%s:%d", serverProtocol, serverName, serverPort);
-        String tasksPath = "/tasks/";
-        baseTestUrl = serverUrl + tasksPath;
-    }
-
-    @BeforeEach
-    public void beforeEach() throws IOException {
-        manager = new InMemoryTaskManager();
-        taskServer = new HttpTaskServer(manager);
-        gson = taskServer.getGson();
-        taskServer.start();
-    }
-
-    @AfterEach
-    public void afterEach() {
-        if (taskServer == null) {
-            return;
-        }
-        taskServer.stop();
-        taskServer = null;
+    HttpTaskManagerTasksTest() {
+        super();
+        baseUrl = baseUrl + "/tasks/";
     }
 
     @Test
@@ -66,7 +31,7 @@ public class HttpTaskManagerTasksTest {
         String taskJson = gson.toJson(task);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(taskJson))
                 .build();
 
@@ -89,7 +54,7 @@ public class HttpTaskManagerTasksTest {
         manager.addNewTask(task2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .GET()
                 .build();
 
@@ -110,7 +75,7 @@ public class HttpTaskManagerTasksTest {
         int taskId = manager.addNewTask(task);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + taskId))
+                .uri(URI.create(baseUrl + taskId))
                 .GET()
                 .build();
 
@@ -135,7 +100,7 @@ public class HttpTaskManagerTasksTest {
         String updatedTaskJson = gson.toJson(updatedTask);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + taskId))
+                .uri(URI.create(baseUrl + taskId))
                 .POST(HttpRequest.BodyPublishers.ofString(updatedTaskJson))
                 .build();
 
@@ -156,7 +121,7 @@ public class HttpTaskManagerTasksTest {
         int taskId = manager.addNewTask(task);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + taskId))
+                .uri(URI.create(baseUrl + taskId))
                 .DELETE()
                 .build();
 
@@ -172,7 +137,7 @@ public class HttpTaskManagerTasksTest {
     @Test
     public void shouldReturn404IfTaskNotFound() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + 999))
+                .uri(URI.create(baseUrl + 999))
                 .GET()
                 .build();
 
@@ -192,7 +157,7 @@ public class HttpTaskManagerTasksTest {
         String taskJson = gson.toJson(task2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(taskJson))
                 .build();
 
@@ -215,7 +180,7 @@ public class HttpTaskManagerTasksTest {
         String taskJson = gson.toJson(task2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(taskJson))
                 .build();
 

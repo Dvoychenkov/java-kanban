@@ -1,20 +1,15 @@
 package api;
 
-import com.google.gson.Gson;
 import entities.Epic;
 import entities.Subtask;
 import enums.TaskStatus;
 import exceptions.NotFoundException;
 import interfaces.TaskManager;
-import managers.InMemoryTaskManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -24,45 +19,21 @@ import java.util.List;
 import static enums.HttpStatusCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HttpTaskManagerSubtasksTest {
-    static TaskManager manager;
-    static HttpTaskServer taskServer;
-    static Gson gson;
-    static HttpClient client;
-    static String baseTestUrl;
+abstract class HttpTaskManagerSubtasksTest<T extends TaskManager> extends HttpTaskServerTest<T> {
     Epic epic;
 
-    @BeforeAll
-    public static void beforeAll() {
-        client = HttpClient.newHttpClient();
-
-        String serverProtocol = "http://";
-        int serverPort = 8080;
-        String serverName = "localhost";
-        String serverUrl = String.format("%s%s:%d", serverProtocol, serverName, serverPort);
-        String subtasksPath = "/subtasks/";
-        baseTestUrl = serverUrl + subtasksPath;
+    HttpTaskManagerSubtasksTest() {
+        super();
+        baseUrl = baseUrl + "/subtasks/";
     }
 
     @BeforeEach
     public void beforeEach() throws IOException {
-        manager = new InMemoryTaskManager();
-        taskServer = new HttpTaskServer(manager);
-        gson = taskServer.getGson();
-        taskServer.start();
+        super.beforeEach();
 
         epic = new Epic("Epic title", "Epic description", TaskStatus.NEW);
         int epicId = manager.addNewEpic(epic);
         epic = manager.getEpic(epicId);
-    }
-
-    @AfterEach
-    public void afterEach() {
-        if (taskServer == null) {
-            return;
-        }
-        taskServer.stop();
-        taskServer = null;
     }
 
     @Test
@@ -72,7 +43,7 @@ public class HttpTaskManagerSubtasksTest {
         String subtaskJson = gson.toJson(subtask);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(subtaskJson))
                 .build();
 
@@ -95,7 +66,7 @@ public class HttpTaskManagerSubtasksTest {
         manager.addNewSubtask(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .GET()
                 .build();
 
@@ -116,7 +87,7 @@ public class HttpTaskManagerSubtasksTest {
         int subtaskId = manager.addNewSubtask(subtask);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + subtaskId))
+                .uri(URI.create(baseUrl + subtaskId))
                 .GET()
                 .build();
 
@@ -141,7 +112,7 @@ public class HttpTaskManagerSubtasksTest {
         String updatedSubtaskJson = gson.toJson(updatedSubtask);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + subtaskId))
+                .uri(URI.create(baseUrl + subtaskId))
                 .POST(HttpRequest.BodyPublishers.ofString(updatedSubtaskJson))
                 .build();
 
@@ -162,7 +133,7 @@ public class HttpTaskManagerSubtasksTest {
         int subtaskId = manager.addNewSubtask(subtask);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + subtaskId))
+                .uri(URI.create(baseUrl + subtaskId))
                 .DELETE()
                 .build();
 
@@ -178,7 +149,7 @@ public class HttpTaskManagerSubtasksTest {
     @Test
     public void shouldReturn404IfSubtaskNotFound() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl + 999))
+                .uri(URI.create(baseUrl + 999))
                 .GET()
                 .build();
 
@@ -198,7 +169,7 @@ public class HttpTaskManagerSubtasksTest {
         String subtaskJson = gson.toJson(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(subtaskJson))
                 .build();
 
@@ -221,7 +192,7 @@ public class HttpTaskManagerSubtasksTest {
         String subtaskJson = gson.toJson(subtask2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseTestUrl))
+                .uri(URI.create(baseUrl))
                 .POST(HttpRequest.BodyPublishers.ofString(subtaskJson))
                 .build();
 
