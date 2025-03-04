@@ -28,9 +28,9 @@ class SubtaskTest {
     @Test
     void addNewSubtask() {
         Subtask subtask = new Subtask("Subtask addNewSubtask", "Subtask addNewSubtask description", TaskStatus.NEW);
-        int subtaskId = taskManager.addNewSubtask(subtask);
+        int subtaskId = taskManager.createSubtask(subtask);
 
-        Subtask savedSubtask = taskManager.getSubtask(subtaskId);
+        Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
 
         assertNotNull(savedSubtask, "Подзадача не найдена.");
         assertEquals(subtask, savedSubtask, "Подзадачи не совпадают.");
@@ -46,21 +46,21 @@ class SubtaskTest {
     @Test
     void addNewSubtaskAndEpicAndLinkThemAndCheckStatuses() {
         Subtask subtask = new Subtask("Subtask addNewSubtask", "Subtask addNewSubtask description", TaskStatus.IN_PROGRESS);
-        int subtaskId = taskManager.addNewSubtask(subtask);
-        Subtask savedSubtask = taskManager.getSubtask(subtaskId);
+        int subtaskId = taskManager.createSubtask(subtask);
+        Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
 
         List<Integer> epicsSubtasksIds = new ArrayList<>();
         epicsSubtasksIds.add(subtaskId);
 
         Epic epic = new Epic("Epic addNewEpic", "Epic addNewEpic description", TaskStatus.NEW);
         epic.setSubtasksIds(epicsSubtasksIds);
-        int epicId = taskManager.addNewEpic(epic);
+        int epicId = taskManager.createEpic(epic);
 
         savedSubtask.setEpicId(epicId);
         taskManager.updateSubtask(savedSubtask);
-        Subtask updatedSubtask = taskManager.getSubtask(subtaskId);
+        Subtask updatedSubtask = taskManager.getSubtaskById(subtaskId);
 
-        Epic savedEpic = taskManager.getEpic(epicId);
+        Epic savedEpic = taskManager.getEpicById(epicId);
 
         assertNotNull(savedEpic, "Эпик не найден.");
         assertNotNull(updatedSubtask, "Подзадача не найдена.");
@@ -82,7 +82,7 @@ class SubtaskTest {
     @Test
     void subtaskMustNotBeSetAsYourselfEpic() {
         Subtask subtask = new Subtask("Subtask addNewSubtask", "Subtask addNewSubtask description", TaskStatus.NEW);
-        int subtaskId = taskManager.addNewSubtask(subtask);
+        int subtaskId = taskManager.createSubtask(subtask);
 
         assertEquals(0, subtask.getEpicId(), "Подзадача привязана к эпику сразу после создания");
 
@@ -96,9 +96,9 @@ class SubtaskTest {
     @Test
     void checkSubtaskMustNotChangedAfterAddingIntoManager() {
         Subtask subtask = new Subtask("Subtask 1", "Description 1", TaskStatus.NEW, 42);
-        int subtaskId = taskManager.addNewSubtask(subtask);
+        int subtaskId = taskManager.createSubtask(subtask);
 
-        Subtask receivedSubtask = taskManager.getSubtask(subtaskId);
+        Subtask receivedSubtask = taskManager.getSubtaskById(subtaskId);
         int receivedSubtaskId = receivedSubtask.getId();
         String receivedSubtaskTitle = receivedSubtask.getTitle();
         String receivedSubtaskDescription = receivedSubtask.getDescription();
@@ -111,7 +111,7 @@ class SubtaskTest {
         subtask.setStatus(TaskStatus.IN_PROGRESS);
         subtask.setEpicId(100500);
 
-        Subtask receivedSubtaskAgain = taskManager.getSubtask(subtaskId);
+        Subtask receivedSubtaskAgain = taskManager.getSubtaskById(subtaskId);
         int receivedSubtaskAgainId = receivedSubtaskAgain.getId();
         String receivedSubtaskAgainTitle = receivedSubtaskAgain.getTitle();
         String receivedSubtaskAgainDescription = receivedSubtaskAgain.getDescription();
@@ -129,17 +129,17 @@ class SubtaskTest {
     @Test
     void checkSubtaskNotChangedInnerAfterUpdateExternal() {
         Subtask subtask = new Subtask("Subtask new", "Subtask new description", TaskStatus.NEW);
-        int subtaskId = taskManager.addNewSubtask(subtask);
-        Subtask savedSubtask = taskManager.getSubtask(subtaskId);
+        int subtaskId = taskManager.createSubtask(subtask);
+        Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
 
         savedSubtask.setTitle("New title");
         taskManager.updateSubtask(savedSubtask);
-        Subtask updatedSubtask = taskManager.getSubtask(subtaskId);
+        Subtask updatedSubtask = taskManager.getSubtaskById(subtaskId);
 
         String subtaskTitle = updatedSubtask.getTitle();
 
         savedSubtask.setTitle("Newest title");
-        Task updatedSubtaskAgain = taskManager.getSubtask(subtaskId);
+        Task updatedSubtaskAgain = taskManager.getSubtaskById(subtaskId);
         String subtaskTitleAgain = updatedSubtaskAgain.getTitle();
 
         assertEquals(subtaskTitle, subtaskTitleAgain, "Заголовок подзадачи не должен был измениться");

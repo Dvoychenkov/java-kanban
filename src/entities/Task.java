@@ -13,8 +13,8 @@ public class Task {
     protected String title;
     protected String description;
     protected TaskStatus status;
-    protected LocalDateTime startTime;
     protected Duration duration = Duration.ZERO;
+    protected LocalDateTime startTime;
 
     protected Task(String title, String description, TaskStatus status, TaskType type) {
         this.title = title;
@@ -27,20 +27,17 @@ public class Task {
         this(title, description, status, TaskType.TASK);
     }
 
+    public Task(String title, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
+        this(title, description, status, TaskType.TASK);
+        this.duration = duration;
+        this.startTime = startTime;
+    }
+
     public Task(Task task) {
         this(task.title, task.description, task.status, TaskType.TASK);
         this.id = task.id;
-        this.startTime = task.startTime;
         this.duration = task.duration;
-    }
-
-    public Task(String title, String description, TaskStatus status, LocalDateTime startTime, Duration duration, TaskType type) {
-        this.title = title;
-        this.description = description;
-        this.status = status;
-        this.type = type;
-        this.startTime = startTime;
-        this.duration = duration;
+        this.startTime = task.startTime;
     }
 
     public TaskType getType() {
@@ -137,6 +134,8 @@ public class Task {
 
     public static Task fromString(String line) {
         String[] fields = line.trim().split(",");
+
+        // Проверка на базовый набор частей строки для создания объекта с минимально необходимым набором свойств
         if (fields.length < 5) {
             throw new TaskStringParseException(String.format("Некорректная длина строки: %s", line));
         }
@@ -152,10 +151,32 @@ public class Task {
         String title = fields[2];
         TaskStatus status = fields[3].isEmpty() ? TaskStatus.NEW : TaskStatus.valueOf(fields[3]);
         String description = fields[4];
+        Duration duration = Duration.ZERO;
+        LocalDateTime localDateTime = null;
+
+        // Проверка на дополнительный набор частей строки - тайминги
+        if (fields.length > 7) {
+            // Длительность
+            if (!fields[6].isBlank()) {
+                try {
+                    duration = Duration.ofMinutes(Long.parseLong(fields[6]));
+                } catch (NumberFormatException ex) {
+                    throw new TaskStringParseException(String.format("Некорректный epic id строки: %s", line));
+                }
+            }
+            // Дата создания
+            if (!fields[7].isBlank()) {
+                try {
+                    localDateTime = LocalDateTime.parse(fields[7]);
+                } catch (NumberFormatException ex) {
+                    throw new TaskStringParseException(String.format("Некорректный epic id строки: %s", line));
+                }
+            }
+        }
 
         switch (type) {
             case TASK:
-                Task task = new Task(title, description, status);
+                Task task = new Task(title, description, status, localDateTime, duration);
                 task.setId(id);
                 return task;
             case EPIC:
@@ -163,10 +184,10 @@ public class Task {
                 epic.setId(id);
                 return epic;
             case SUBTASK:
-                Subtask subtask = new Subtask(title, description, status);
+                Subtask subtask = new Subtask(title, description, status, localDateTime, duration);
                 subtask.setId(id);
 
-                if (fields.length > 5 && !fields[5].isEmpty()) {
+                if (fields.length > 5 && !fields[5].isBlank()) {
                     int epicId;
                     try {
                         epicId = Integer.parseInt(fields[5]);

@@ -21,17 +21,17 @@ public interface TaskManager {
 
     void deleteAllEpics();
 
-    Task getTask(int id);
+    Task getTaskById(int id);
 
-    Subtask getSubtask(int id);
+    Subtask getSubtaskById(int id);
 
-    Epic getEpic(int id);
+    Epic getEpicById(int id);
 
-    int addNewTask(Task task);
+    int createTask(Task task);
 
-    int addNewSubtask(Subtask subtask);
+    int createSubtask(Subtask subtask);
 
-    int addNewEpic(Epic epic);
+    int createEpic(Epic epic);
 
     void updateTask(Task task);
 
@@ -39,17 +39,19 @@ public interface TaskManager {
 
     void updateEpic(Epic epic);
 
-    void deleteTaskById(int id);
+    void deleteTask(int id);
 
-    void deleteSubtaskById(int id);
+    void deleteSubtask(int id);
 
-    void deleteEpicById(int id);
+    void deleteEpic(int id);
 
-    List<Subtask> getSubtasksOfEpic(int id);
+    List<Subtask> getEpicSubtasks(int id);
 
-    List<Subtask> getSubtasksOfEpic(Epic epic);
+    List<Subtask> getEpicSubtasks(Epic epic);
 
     void deleteEpicSubtasks(Epic epic);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
 }

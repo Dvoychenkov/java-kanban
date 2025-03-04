@@ -27,9 +27,9 @@ class EpicTest {
     @Test
     void addNewEpic() {
         Epic epic = new Epic("Epic addNewEpic", "Epic addNewEpic description", TaskStatus.NEW);
-        int epicId = taskManager.addNewEpic(epic);
+        int epicId = taskManager.createEpic(epic);
 
-        Epic savedEpic = taskManager.getEpic(epicId);
+        Epic savedEpic = taskManager.getEpicById(epicId);
 
         assertNotNull(savedEpic, "Эпик не найден.");
         assertEquals(epic, savedEpic, "Эпики не совпадают.");
@@ -44,12 +44,12 @@ class EpicTest {
     @Test
     void addNewEpicAndSubtaskAndLinkThemAndCheckStatuses() {
         Epic epic = new Epic("Epic addNewEpic", "Epic addNewEpic description", TaskStatus.NEW);
-        int epicId = taskManager.addNewEpic(epic);
-        Epic savedEpic = taskManager.getEpic(epicId);
+        int epicId = taskManager.createEpic(epic);
+        Epic savedEpic = taskManager.getEpicById(epicId);
 
         Subtask subtask = new Subtask("Subtask addNewSubtask", "Subtask addNewSubtask description", TaskStatus.IN_PROGRESS);
-        int subtaskId = taskManager.addNewSubtask(subtask);
-        Subtask savedSubtask = taskManager.getSubtask(subtaskId);
+        int subtaskId = taskManager.createSubtask(subtask);
+        Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
 
         savedSubtask.setEpicId(epicId);
 
@@ -57,7 +57,7 @@ class EpicTest {
         epicsSubtasksIds.add(subtaskId);
         savedEpic.setSubtasksIds(epicsSubtasksIds);
         taskManager.updateEpic(savedEpic);
-        Epic updatedEpic = taskManager.getEpic(epicId);
+        Epic updatedEpic = taskManager.getEpicById(epicId);
 
         assertNotNull(updatedEpic, "Эпик не найден.");
         assertNotNull(savedSubtask, "Подзадача не найдена.");
@@ -75,7 +75,7 @@ class EpicTest {
     @Test
     void epicMustNotBeAddedIntoYourselfAsEpic() {
         Epic epic = new Epic("Epic addNewEpic", "Epic addNewEpic description", TaskStatus.NEW);
-        int epicId = taskManager.addNewEpic(epic);
+        int epicId = taskManager.createEpic(epic);
 
         assertNotNull(epic.getSubtasksIds(), "Список подзадач эпика не проинициализирован");
         assertTrue(epic.getSubtasksIds().isEmpty(), "Эпик содержит подзадачи сразу после создания");
@@ -93,9 +93,9 @@ class EpicTest {
     @Test
     void checkEpicMustNotChangedAfterAddingIntoManager() {
         Epic epic = new Epic("Subtask 1", "Description 1", TaskStatus.NEW, List.of(42));
-        int epicId = taskManager.addNewEpic(epic);
+        int epicId = taskManager.createEpic(epic);
 
-        Epic receivedEpic = taskManager.getEpic(epicId);
+        Epic receivedEpic = taskManager.getEpicById(epicId);
         int receivedEpicId = receivedEpic.getId();
         String receivedEpicTitle = receivedEpic.getTitle();
         String receivedEpicDescription = receivedEpic.getDescription();
@@ -114,7 +114,7 @@ class EpicTest {
         newEpicSubtasks.add(100500);
         epic.setSubtasksIds(newEpicSubtasks);
 
-        Epic receivedEpicAgain = taskManager.getEpic(epicId);
+        Epic receivedEpicAgain = taskManager.getEpicById(epicId);
         int receivedEpicAgainId = receivedEpicAgain.getId();
         String receivedEpicAgainTitle = receivedEpicAgain.getTitle();
         String receivedEpicAgainDescription = receivedEpicAgain.getDescription();
@@ -137,17 +137,17 @@ class EpicTest {
     @Test
     void checkEpicNotChangedInnerAfterUpdateExternal() {
         Epic epic = new Epic("Epic new", "Epic new description", TaskStatus.NEW);
-        int epicId = taskManager.addNewEpic(epic);
-        Epic savedEpic = taskManager.getEpic(epicId);
+        int epicId = taskManager.createEpic(epic);
+        Epic savedEpic = taskManager.getEpicById(epicId);
 
         savedEpic.setTitle("New title");
         taskManager.updateEpic(savedEpic);
-        Epic updatedEpic = taskManager.getEpic(epicId);
+        Epic updatedEpic = taskManager.getEpicById(epicId);
 
         String epicTitle = updatedEpic.getTitle();
 
         savedEpic.setTitle("Newest title");
-        Epic updatedEpicAgain = taskManager.getEpic(epicId);
+        Epic updatedEpicAgain = taskManager.getEpicById(epicId);
         String epicTitleAgain = updatedEpicAgain.getTitle();
 
         assertEquals(epicTitle, epicTitleAgain, "Заголовок эпика не должен был измениться");
@@ -158,8 +158,8 @@ class EpicTest {
     void checkEpicSubtasksInActualState() {
         // Создаём эпик без подзадач, добавляем в менеджер
         Epic epic = new Epic("Epic addNewEpic", "Epic addNewEpic description", TaskStatus.NEW);
-        int epicId = taskManager.addNewEpic(epic);
-        Epic savedEpic = taskManager.getEpic(epicId);
+        int epicId = taskManager.createEpic(epic);
+        Epic savedEpic = taskManager.getEpicById(epicId);
 
         List<Integer> epicSubtasksIds;
         epicSubtasksIds = new ArrayList<>(savedEpic.getSubtasksIds());
@@ -168,34 +168,34 @@ class EpicTest {
         // Создаём подзадачу 1, указываем им epicId, добавляем в менеджер
         Subtask subtask1 = new Subtask("Subtask addNewSubtask 1", "Subtask addNewSubtask description 1", TaskStatus.IN_PROGRESS);
         subtask1.setEpicId(epicId);
-        int subtaskId1 = taskManager.addNewSubtask(subtask1);
-        Subtask savedSubtask1 = taskManager.getSubtask(subtaskId1);
+        int subtaskId1 = taskManager.createSubtask(subtask1);
+        Subtask savedSubtask1 = taskManager.getSubtaskById(subtaskId1);
 
-        savedEpic = taskManager.getEpic(epicId);
+        savedEpic = taskManager.getEpicById(epicId);
         epicSubtasksIds = savedEpic.getSubtasksIds();
         assertArrayEquals(new int[]{subtaskId1}, intListToArr(epicSubtasksIds), "Эпик содержит некорректный набор id подзадач");
 
         // Создаём подзадачу 2, указываем им epicId, добавляем в менеджер
         Subtask subtask2 = new Subtask("Subtask addNewSubtask 2", "Subtask addNewSubtask description 2", TaskStatus.IN_PROGRESS);
         subtask2.setEpicId(epicId);
-        int subtaskId2 = taskManager.addNewSubtask(subtask2);
-        Subtask savedSubtask2 = taskManager.getSubtask(subtaskId2);
+        int subtaskId2 = taskManager.createSubtask(subtask2);
+        Subtask savedSubtask2 = taskManager.getSubtaskById(subtaskId2);
 
-        savedEpic = taskManager.getEpic(epicId);
+        savedEpic = taskManager.getEpicById(epicId);
         epicSubtasksIds = savedEpic.getSubtasksIds();
         assertArrayEquals(new int[]{subtaskId1, subtaskId2}, intListToArr(epicSubtasksIds), "Эпик содержит некорректный набор id подзадач");
 
         // Удаляем подзадачу 2
-        taskManager.deleteSubtaskById(subtaskId2);
+        taskManager.deleteSubtask(subtaskId2);
 
-        savedEpic = taskManager.getEpic(epicId);
+        savedEpic = taskManager.getEpicById(epicId);
         epicSubtasksIds = savedEpic.getSubtasksIds();
         assertArrayEquals(new int[]{subtaskId1}, intListToArr(epicSubtasksIds), "Эпик содержит некорректный набор id подзадач");
 
         // Удаляем подзадачу 1
-        taskManager.deleteSubtaskById(subtaskId1);
+        taskManager.deleteSubtask(subtaskId1);
 
-        savedEpic = taskManager.getEpic(epicId);
+        savedEpic = taskManager.getEpicById(epicId);
         epicSubtasksIds = savedEpic.getSubtasksIds();
         assertArrayEquals(new int[]{}, intListToArr(epicSubtasksIds), "Эпик содержит некорректный набор id подзадач");
     }

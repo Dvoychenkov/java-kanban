@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -46,15 +47,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
             // Убираем строку-заголовок и сортируем строки по возрастанию для сохранения порядка id задач
             String[] filteredAndSortedLines = Arrays.copyOfRange(lines, 1, lines.length);
-            Arrays.sort(filteredAndSortedLines);
+            Arrays.sort(filteredAndSortedLines, Comparator.comparingInt(line -> Integer.parseInt(line.split(",")[0])));
 
+            // Добавляем задачи без вызова метода сохранения
             Arrays.stream(filteredAndSortedLines)
                 .map(Task::fromString)
                 .forEach(task -> {
                     switch (task.getType()) {
-                        case TASK -> addNewTask(task);
-                        case SUBTASK -> addNewSubtask((Subtask) task);
-                        case EPIC -> addNewEpic((Epic) task);
+                        case TASK -> super.createTask(task);
+                        case SUBTASK -> super.createSubtask((Subtask) task);
+                        case EPIC -> super.createEpic((Epic) task);
                     }
                 });
 
@@ -104,22 +106,22 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public int addNewTask(Task task) {
-        int id = super.addNewTask(task);
+    public int createTask(Task task) {
+        int id = super.createTask(task);
         save();
         return id;
     }
 
     @Override
-    public int addNewSubtask(Subtask subtask) {
-        int id = super.addNewSubtask(subtask);
+    public int createSubtask(Subtask subtask) {
+        int id = super.createSubtask(subtask);
         save();
         return id;
     }
 
     @Override
-    public int addNewEpic(Epic epic) {
-        int id = super.addNewEpic(epic);
+    public int createEpic(Epic epic) {
+        int id = super.createEpic(epic);
         save();
         return id;
     }
@@ -143,20 +145,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void deleteTaskById(int id) {
-        super.deleteTaskById(id);
+    public void deleteTask(int id) {
+        super.deleteTask(id);
         save();
     }
 
     @Override
-    public void deleteSubtaskById(int id) {
-        super.deleteSubtaskById(id);
+    public void deleteSubtask(int id) {
+        super.deleteSubtask(id);
         save();
     }
 
     @Override
-    public void deleteEpicById(int id) {
-        super.deleteEpicById(id);
+    public void deleteEpic(int id) {
+        super.deleteEpic(id);
         save();
     }
 
@@ -174,23 +176,23 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         // 1. Создаём задачи, эпики и подзадачи
         Task task1 = new Task("Task 1", "Description 1", TaskStatus.NEW);
         Task task2 = new Task("Task 2", "Description 2", TaskStatus.NEW);
-        int task1Id = taskManagerFirstInit.addNewTask(task1);
-        int task2Id = taskManagerFirstInit.addNewTask(task2);
+        int task1Id = taskManagerFirstInit.createTask(task1);
+        int task2Id = taskManagerFirstInit.createTask(task2);
 
         Epic epic1 = new Epic("Epic 1", "Epic with subtasks", TaskStatus.NEW);
-        int epic1Id = taskManagerFirstInit.addNewEpic(epic1);
+        int epic1Id = taskManagerFirstInit.createEpic(epic1);
 
         Subtask subtask1 = new Subtask("Subtask 1", "Subtask 1 description", TaskStatus.NEW, epic1Id);
-        int subtask1Id = taskManagerFirstInit.addNewSubtask(subtask1);
+        int subtask1Id = taskManagerFirstInit.createSubtask(subtask1);
 
         Subtask subtask2 = new Subtask("Subtask 2", "Subtask 2 description", TaskStatus.NEW, epic1Id);
-        int subtask2Id = taskManagerFirstInit.addNewSubtask(subtask2);
+        int subtask2Id = taskManagerFirstInit.createSubtask(subtask2);
 
         Subtask subtask3 = new Subtask("Subtask 3", "Subtask 3 description", TaskStatus.NEW, epic1Id);
-        int subtask3Id = taskManagerFirstInit.addNewSubtask(subtask3);
+        int subtask3Id = taskManagerFirstInit.createSubtask(subtask3);
 
         Epic epic2 = new Epic("Epic 2", "Epic without subtasks", TaskStatus.NEW);
-        int epic2Id = taskManagerFirstInit.addNewEpic(epic2);
+        int epic2Id = taskManagerFirstInit.createEpic(epic2);
 
         // 2. Снова создаём менеджер из того же файла
         TaskManager loadedManagerSecondInit = FileBackedTaskManager.loadFromFile(storageFile);

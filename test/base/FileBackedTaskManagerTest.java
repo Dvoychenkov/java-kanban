@@ -39,7 +39,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
         ManagerSaveException managerSaveException = assertThrows(ManagerSaveException.class, () -> {
             FileBackedTaskManager manager = new FileBackedTaskManager(invalidFile);
-            manager.addNewTask(new Task("Invalid Task", "Should fail", TaskStatus.NEW));
+            manager.createTask(new Task("Invalid Task", "Should fail", TaskStatus.NEW));
         }, "Ожидалось исключение об ошибке записи");
 
     }
